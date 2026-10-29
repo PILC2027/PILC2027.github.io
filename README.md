@@ -4,12 +4,12 @@ Dvojezični portal (EN/HR), responzivan za mobitel i računalo, sa svijetlom i t
 
 ## Što radi
 
-- Firebase Authentication: e-mail/lozinka, registracija, potvrda e-maila, reset lozinke, opcija pamćenja prijave, odjava.
+- Firebase Authentication: e-mail/lozinka, registracija, reset lozinke, opcija pamćenja prijave, odjava.
 - Novi korisnik uvijek dobiva `role: guest` i `status: pending`. Odabrana uloga izlagača je samo zahtjev. Administrator odobrava pristup i dodjeljuje uloge.
 - Firestore i Storage pravila provjeravaju ovlasti neovisno o prikazu stranice.
 - Profil: ime, prezime, titula, ustanova; digitalna akreditacija s automatskim podacima i PDF preuzimanjem.
 - Automatske PDF potvrde: administrator učita predložak i odredi položaj imena. Za svakog sudionika umeću se ime i prezime iz profila. Podržani su hrvatski znakovi.
-- Konačna potvrda dostupna je od **21. 3. 2027. u 00:00 po vremenu Zagreba**, samo uz odobren račun, potvrđen e-mail, evidentiranu prisutnost i objavljen predložak. Storage provjerava vrijeme poslužitelja. Demo potvrda dostupna je ranije, vidljivo označena kao neslužbena.
+- Konačna potvrda dostupna je od **21. 3. 2027. u 00:00 po vremenu Zagreba**, samo uz odobren račun, evidentiranu prisutnost i objavljen predložak. Storage provjerava vrijeme poslužitelja. Demo potvrda dostupna je ranije, vidljivo označena kao neslužbena.
 - Admin: odobrenje/ukidanje pristupa, dodjela uloga, prisutnost, pretraživanje sudionika, unos/uređivanje/brisanje sesija i izlagača, pregled radova, postavke potvrda.
 - Program: demo satnica i primjeri panela; administratori mogu učitati demo u bazu i urediti ga ili unositi vlastiti raspored.
 - Predaja radova: PDF do 10 MB, naslov, autori, sažetak. Samo odobreni izlagači i administratori. Izmjena rada vraća status na pregled.
@@ -40,16 +40,16 @@ Projekt je `pilc2027`. Web konfiguracija je već unesena u `src/config.js`. Fire
 
    CORS uključuje GitHub Pages domenu i lokalni pregled. Za drugu domenu ažurirajte datoteku. Ne koriste se trajne javne download poveznice koje bi zaobišle vremensko zaključavanje.
 
-7. Uredite predloške Firebase e-mailova za potvrdu računa i reset lozinke, naziv pošiljatelja i podršku. Preporučena minimalna lozinka: 8 znakova. Predložak poruke konfigurira se u Firebase konzoli; aplikacija ne šalje obavijesti o odobrenju računa.
+7. Uredite predložak Firebase e-maila za reset lozinke, naziv pošiljatelja i podršku. Preporučena minimalna lozinka: 8 znakova. Predložak poruke konfigurira se u Firebase konzoli; aplikacija ne šalje obavijesti o odobrenju računa.
 
 ## 2. Prvi administrator
 
-1. Registrirajte vlastiti račun putem stranice i potvrdite e-mail.
+1. Registrirajte vlastiti račun putem stranice.
 2. U **Authentication → Users** pronađite svoj UID.
 3. U **Firestore → users → taj UID** promijenite samo `role` u `admin` i `status` u `approved`. Polja su stringovi. Ostatak profila već je nastao registracijom.
 4. Osvježite status na stranici ili se ponovno prijavite. Pojavljuje se navigacijska stavka **Admin**.
 
-Prvi admin postavlja se isključivo u konzoli vlasnika projekta. Nema ugrađenih lozinki, javnog admin e-maila ni mogućnosti samostalne dodjele admin uloge. Administrator kroz portal ne može ukinuti vlastitu ulogu. Nakon dodjele admin uloge drugom korisniku njegov račun i e-mail također moraju biti odobreni/potvrđeni.
+Prvi admin postavlja se isključivo u konzoli vlasnika projekta. Nema ugrađenih lozinki, javnog admin e-maila ni mogućnosti samostalne dodjele admin uloge. Administrator kroz portal ne može ukinuti vlastitu ulogu. Nakon dodjele admin uloge drugom korisniku njegov račun također mora imati status `approved`. Potvrda e-maila nije uvjet pristupa.
 
 ## 3. GitHub Pages
 

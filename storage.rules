@@ -2,7 +2,7 @@ rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
     function profile() { return firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data; }
-    function active() { return request.auth != null && request.auth.token.email_verified == true && profile().status == 'approved'; }
+    function active() { return request.auth != null && profile().status == 'approved'; }
     function admin() { return active() && profile().role == 'admin'; }
     function pdf() { return request.resource != null && request.resource.size > 0 && request.resource.size <= 10 * 1024 * 1024 && request.resource.contentType == 'application/pdf'; }
     match /papers/{uid}/paper.pdf {

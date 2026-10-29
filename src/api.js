@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, sendEmailVerification, signOut, setPersistence, browserLocalPersistence, browserSessionPersistence, reload } from 'firebase/auth';
+import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, signOut, setPersistence, browserLocalPersistence, browserSessionPersistence, reload } from 'firebase/auth';
 import { getFirestore, doc, setDoc, getDoc, updateDoc, onSnapshot, collection, getDocs, addDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getBytes } from 'firebase/storage';
 import { firebaseConfig } from './config.js';
@@ -10,13 +10,11 @@ export const api={
   observeProfile: (uid,cb,fail)=>onSnapshot(doc(db,'users',uid),s=>cb(s.exists()?{id:s.id,...s.data()}:null),fail),
   async login(email,password,remember){await setPersistence(auth,remember?browserLocalPersistence:browserSessionPersistence);return signInWithEmailAndPassword(auth,email,password);},
   async register(data,password){
-    const {user}=await createUserWithEmailAndPassword(auth,data.email,password);
+    await createUserWithEmailAndPassword(auth,data.email,password);
     await api.completeProfile(data);
-    await sendEmailVerification(user);
   },
   async completeProfile(data){await setDoc(doc(db,'users',auth.currentUser.uid),{...data,email:auth.currentUser.email,role:'guest',status:'pending',attended:false,createdAt:serverTimestamp(),updatedAt:serverTimestamp()});},
   reset: email=>sendPasswordResetEmail(auth,email),
-  verify: ()=>sendEmailVerification(auth.currentUser),
   async refresh(){await reload(auth.currentUser);await auth.currentUser.getIdToken(true);return auth.currentUser;},
   logout: ()=>signOut(auth),
   saveProfile: data=>updateDoc(doc(db,'users',auth.currentUser.uid),{...data,updatedAt:serverTimestamp()}),

@@ -1,15 +1,15 @@
 const scenario=new URLSearchParams(location.search).get('test')||'signedout';
 const base={id:'test-person',firstName:'Željka',lastName:'Šimić',title:'dr. sc.',affiliation:'Veleučilište PAR',email:'test@example.com',role:scenario==='admin'?'admin':scenario==='presenter'?'presenter':'guest',requestedRole:'guest',status:scenario==='pending'?'pending':'approved',attended:false};
-let profile=base,user=scenario==='signedout'?null:{uid:base.id,email:base.email,emailVerified:true},authCallback,profileCallback;
+let profile=base,user=scenario==='signedout'?null:{uid:base.id,email:base.email,emailVerified:false},authCallback,profileCallback;
 let sessions=[],presenters=[],submissions=[],submission=null,settings=null;
 let users=[base,{...base,id:'pending-person',firstName:'Ana',lastName:'Horvat',role:'guest',requestedRole:'presenter',status:'pending',email:'ana@example.com'}];
 export const api={
  observeAuth(cb){authCallback=cb;setTimeout(()=>cb(user),0);return ()=>{};},
  observeProfile(uid,cb){profileCallback=cb;setTimeout(()=>cb(profile),0);return ()=>{};},
- async login(email,password){if(password==='incorrect')throw {code:'auth/invalid-credential'};user={uid:base.id,email,emailVerified:true};authCallback(user);},
+ async login(email,password){if(password==='incorrect')throw {code:'auth/invalid-credential'};user={uid:base.id,email,emailVerified:false};authCallback(user);},
  async register(data){profile={...base,...data,status:'pending'};user={uid:base.id,email:data.email,emailVerified:false};authCallback(user);},
  async completeProfile(data){profile={...base,...data,status:'pending'};profileCallback(profile);},
- async reset(){},async verify(){},async refresh(){return user;},async logout(){user=null;authCallback(null);},
+ async reset(){},async refresh(){return user;},async logout(){user=null;authCallback(null);},
  async saveProfile(data){profile={...profile,...data};profileCallback(profile);},
  async sessions(){return [...sessions];},async addSession(data){sessions.push({...data,id:'session-'+sessions.length});},async editSession(id,data){sessions=sessions.map(s=>s.id===id?{...s,...data}:s);},async removeSession(id){sessions=sessions.filter(s=>s.id!==id);},
  async presenters(){return [...presenters];},async addPresenter(data){presenters.push({...data,id:'presenter-'+presenters.length});},async editPresenter(id,data){presenters=presenters.map(p=>p.id===id?{...p,...data}:p);},async removePresenter(id){presenters=presenters.filter(p=>p.id!==id);},

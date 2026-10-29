@@ -4,7 +4,7 @@ service cloud.firestore {
     function signedIn() { return request.auth != null; }
     function owner(uid) { return signedIn() && request.auth.uid == uid; }
     function active() {
-      return signedIn() && request.auth.token.email_verified == true
+      return signedIn()
         && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'approved';
     }
     function admin() { return active() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'; }
