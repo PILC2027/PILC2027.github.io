@@ -1,0 +1,20 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function profile() { return firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data; }
+    function active() { return request.auth != null && request.auth.token.email_verified == true && profile().status == 'approved'; }
+    function admin() { return active() && profile().role == 'admin'; }
+    function pdf() { return request.resource != null && request.resource.size > 0 && request.resource.size <= 10 * 1024 * 1024 && request.resource.contentType == 'application/pdf'; }
+    match /papers/{uid}/paper.pdf {
+      allow read: if admin() || (active() && request.auth.uid == uid);
+      allow write: if active() && request.auth.uid == uid && profile().role in ['presenter','admin'] && pdf();
+    }
+    match /templates/certificate.pdf {
+      allow read: if admin() || (active() && profile().attended == true
+        && request.time >= timestamp.date(2027,3,21) - duration.value(1,'h')
+        && firestore.get(/databases/(default)/documents/settings/certificates).data.published == true);
+      allow write: if admin() && pdf();
+    }
+    match /{allPaths=**} { allow read, write: if false; }
+  }
+}

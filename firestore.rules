@@ -1,0 +1,82 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function owner(uid) { return signedIn() && request.auth.uid == uid; }
+    function active() {
+      return signedIn() && request.auth.token.email_verified == true
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'approved';
+    }
+    function admin() { return active() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'; }
+    function presenter() { return active() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['presenter','admin']; }
+    function str(s, min, max) { return s is string && s.size() >= min && s.size() <= max; }
+    function validUser(d) {
+      return d.keys().hasAll(['firstName','lastName','title','affiliation','email','requestedRole','role','status','attended','createdAt','updatedAt'])
+        && d.keys().hasOnly(['firstName','lastName','title','affiliation','email','requestedRole','role','status','attended','createdAt','updatedAt'])
+        && str(d.firstName,1,60) && str(d.lastName,1,60) && str(d.title,0,60) && str(d.affiliation,1,160)
+        && str(d.email,3,254) && d.requestedRole in ['guest','presenter'] && d.role in ['guest','presenter','admin']
+        && d.status in ['pending','approved','rejected'] && d.attended is bool
+        && d.createdAt is timestamp && d.updatedAt == request.time;
+    }
+    match /users/{uid} {
+      allow get: if owner(uid) || admin();
+      allow list: if admin();
+      allow create: if owner(uid) && validUser(request.resource.data)
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.role == 'guest' && request.resource.data.status == 'pending'
+        && request.resource.data.attended == false && request.resource.data.createdAt == request.time;
+      allow update: if validUser(request.resource.data) && (
+        (owner(uid) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['firstName','lastName','title','affiliation','updatedAt']))
+        || (admin() && uid != request.auth.uid && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['role','status','attended','updatedAt']))
+      );
+      allow delete: if false;
+    }
+    function validSession(d) {
+      return d.keys().hasOnly(['day','time','end','titleEn','titleHr','room','type'])
+        && d.day in ['18','19','20'] && d.time.matches('^([01][0-9]|2[0-3]):[0-5][0-9]$')
+        && d.end.matches('^([01][0-9]|2[0-3]):[0-5][0-9]$') && d.end > d.time
+        && str(d.titleEn,1,250) && str(d.titleHr,1,250) && str(d.room,1,120) && str(d.type,1,80);
+    }
+    match /sessions/{id} {
+      allow read: if active();
+      allow create, update: if admin() && validSession(request.resource.data);
+      allow delete: if admin();
+    }
+    function validPresenter(d) {
+      return d.keys().hasOnly(['name','titleEn','titleHr','bioEn','bioHr','photo'])
+        && str(d.name,1,160) && str(d.titleEn,1,120) && str(d.titleHr,1,120)
+        && str(d.bioEn,1,2000) && str(d.bioHr,1,2000) && str(d.photo,0,1500)
+        && (d.photo == '' || d.photo.matches('^https://.*'));
+    }
+    match /presenters/{id} {
+      allow read: if active();
+      allow create, update: if admin() && validPresenter(request.resource.data);
+      allow delete: if admin();
+    }
+    function validSubmission(d,uid) {
+      return d.keys().hasOnly(['title','authors','abstract','ownerId','status','updatedAt'])
+        && d.ownerId == uid && str(d.title,1,250) && str(d.authors,1,500) && str(d.abstract,1,5000)
+        && d.status in ['submitted','accepted','revision','rejected'] && d.updatedAt == request.time;
+    }
+    match /submissions/{uid} {
+      allow get: if (active() && owner(uid)) || admin();
+      allow list: if admin();
+      allow create: if owner(uid) && presenter() && validSubmission(request.resource.data,uid) && request.resource.data.status == 'submitted';
+      allow update: if validSubmission(request.resource.data,uid) && (
+        (owner(uid) && presenter() && request.resource.data.status == 'submitted')
+        || (admin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','updatedAt']))
+      );
+      allow delete: if false;
+    }
+    match /settings/certificates {
+      allow read: if active();
+      allow create, update: if admin() && request.resource.data.keys().hasOnly(['x','y','fontSize','published','hasTemplate'])
+        && request.resource.data.x is number && request.resource.data.x >= 10 && request.resource.data.x <= 90
+        && request.resource.data.y is number && request.resource.data.y >= 10 && request.resource.data.y <= 90
+        && request.resource.data.fontSize is number && request.resource.data.fontSize >= 10 && request.resource.data.fontSize <= 60
+        && request.resource.data.published is bool && request.resource.data.hasTemplate == true;
+      allow delete: if false;
+    }
+    match /{document=**} { allow read, write: if false; }
+  }
+}
