@@ -1,9 +1,17 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, signOut, setPersistence, browserLocalPersistence, browserSessionPersistence, reload } from 'firebase/auth';
-import { getFirestore, doc, setDoc, getDoc, updateDoc, onSnapshot, collection, getDocs, addDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { getFirestore, doc, setDoc, getDoc, updateDoc, onSnapshot, collection, getDocs, addDoc, deleteDoc, serverTimestamp, query, where, writeBatch } from 'firebase/firestore';
 import { firebaseConfig } from './config.js';
 const app=initializeApp(firebaseConfig), auth=getAuth(app), db=getFirestore(app);
 export const api={
+  async savedSessions(){return (await getDocs(collection(db,'users',auth.currentUser.uid,'savedSessions'))).docs.map(d=>d.id);},
+  saveSession: (id,saved)=>saved?setDoc(doc(db,'users',auth.currentUser.uid,'savedSessions',id),{savedAt:serverTimestamp()}):deleteDoc(doc(db,'users',auth.currentUser.uid,'savedSessions',id)),
+  async readNotifications(){return (await getDocs(collection(db,'users',auth.currentUser.uid,'notificationReads'))).docs.map(d=>d.id);},
+  markRead: id=>setDoc(doc(db,'users',auth.currentUser.uid,'notificationReads',id),{readAt:serverTimestamp()}),
+  observeNotifications(role,cb,fail){return onSnapshot(query(collection(db,'notifications'),where('audience','in',['all',`role:${role}`,`user:${auth.currentUser.uid}`])),s=>cb(s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.createdAt?.toMillis()||0)-(a.createdAt?.toMillis()||0))),fail);},
+  async sentNotifications(){return (await getDocs(collection(db,'notifications'))).docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.createdAt?.toMillis()||0)-(a.createdAt?.toMillis()||0));},
+  async sendNotification(data,audiences){const batch=writeBatch(db);for(const audience of audiences)batch.set(doc(collection(db,'notifications')),{...data,audience,createdBy:auth.currentUser.uid,createdAt:serverTimestamp()});await batch.commit();},
+  removeNotification: id=>deleteDoc(doc(db,'notifications',id)),
   setLanguage: language=>{auth.languageCode=language;},
   observeAuth: cb=>onAuthStateChanged(auth,cb),
   observeProfile: (uid,cb,fail)=>onSnapshot(doc(db,'users',uid),s=>cb(s.exists()?{id:s.id,...s.data()}:null),fail),

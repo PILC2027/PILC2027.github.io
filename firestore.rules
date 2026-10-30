@@ -80,6 +80,30 @@ service cloud.firestore {
         && request.resource.data.published is bool && request.resource.data.hasTemplate == true;
       allow delete: if false;
     }
+    function canReadNotice(d) {
+      return active() && (d.audience == 'all' || d.audience == 'role:' + get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role || d.audience == 'user:' + request.auth.uid);
+    }
+    match /notifications/{id} {
+      allow read: if admin() || canReadNotice(resource.data);
+      allow create: if admin() && request.resource.data.keys().hasOnly(['titleEn','titleHr','bodyEn','bodyHr','audience','createdBy','createdAt'])
+        && str(request.resource.data.titleEn,1,180) && str(request.resource.data.titleHr,1,180)
+        && str(request.resource.data.bodyEn,1,20000) && str(request.resource.data.bodyHr,1,20000)
+        && request.resource.data.createdBy == request.auth.uid && request.resource.data.createdAt == request.time
+        && (request.resource.data.audience in ['all','role:guest','role:presenter','role:admin'] || request.resource.data.audience.matches('^user:[A-Za-z0-9_-]{1,128}$'));
+      allow update: if false;
+      allow delete: if admin();
+    }
+    match /users/{uid}/savedSessions/{sessionId} {
+      allow read, delete: if active() && owner(uid);
+      allow create, update: if active() && owner(uid) && sessionId.size() <= 128
+        && request.resource.data.keys().hasOnly(['savedAt']) && request.resource.data.savedAt == request.time;
+    }
+    match /users/{uid}/notificationReads/{noticeId} {
+      allow read, delete: if active() && owner(uid);
+      allow create, update: if active() && owner(uid)
+        && canReadNotice(get(/databases/$(database)/documents/notifications/$(noticeId)).data)
+        && request.resource.data.keys().hasOnly(['readAt']) && request.resource.data.readAt == request.time;
+    }
     match /{document=**} { allow read, write: if false; }
   }
 }

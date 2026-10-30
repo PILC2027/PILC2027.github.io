@@ -17,3 +17,20 @@ test('programme and presenter writes are admin only with validation',async()=>{c
 test('presenters may submit only their own papers; review is admin only',async()=>{const s={title:'Paper',authors:'Ana',abstract:'Abstract',paperUrl:'https://example.com/paper.pdf',ownerId:'presenter',status:'submitted',updatedAt:serverTimestamp()};await assertSucceeds(setDoc(doc(ctx('presenter').firestore(),'submissions','presenter'),s));await assertFails(setDoc(doc(ctx('guest').firestore(),'submissions','guest'),{...s,ownerId:'guest'}));await assertFails(updateDoc(doc(ctx('presenter').firestore(),'submissions','presenter'),{status:'accepted',updatedAt:serverTimestamp()}));await assertSucceeds(updateDoc(doc(ctx('admin').firestore(),'submissions','presenter'),{status:'accepted',updatedAt:serverTimestamp()}));await assertFails(getDoc(doc(ctx('guest').firestore(),'submissions','presenter')));});
 test('only admins can publish valid static PDF template settings',async()=>{const settings={x:50,y:51,fontSize:30,published:true,hasTemplate:true,templatePath:'assets/documents/certificate-demo.pdf'};await assertFails(setDoc(doc(ctx('guest').firestore(),'settings','certificates'),settings));await assertSucceeds(setDoc(doc(ctx('admin').firestore(),'settings','certificates'),settings));for(const path of ['https://evil.example/template.pdf','../private.pdf','assets/documents/../../private.pdf'])await assertFails(setDoc(doc(ctx('admin').firestore(),'settings','certificates'),{...settings,templatePath:path}));});
 test('paper links require HTTPS and are not public',async()=>{const s={title:'Paper',authors:'Ana',abstract:'Abstract',ownerId:'presenter',status:'submitted',updatedAt:serverTimestamp(),paperUrl:'javascript:alert(1)'};await assertFails(setDoc(doc(ctx('presenter').firestore(),'submissions','presenter'),s));await assertFails(getDoc(doc(env.unauthenticatedContext().firestore(),'submissions','presenter')));});
+test('targeted notifications are private and only admins publish',async()=>{
+ const notice={titleEn:'Hello',titleHr:'Pozdrav',bodyEn:'<p>News</p>',bodyHr:'<p>Novost</p>',audience:'role:presenter',createdBy:'admin',createdAt:serverTimestamp()};
+ await assertSucceeds(setDoc(doc(ctx('admin').firestore(),'notifications','targeted'),notice));
+ await assertSucceeds(getDoc(doc(ctx('presenter').firestore(),'notifications','targeted')));
+ await assertFails(getDoc(doc(ctx('guest').firestore(),'notifications','targeted')));
+ await assertFails(setDoc(doc(ctx('guest').firestore(),'notifications','forged'),{...notice,createdBy:'guest'}));
+ await assertSucceeds(setDoc(doc(ctx('admin').firestore(),'notifications','private'),{...notice,audience:'user:guest'}));
+ await assertSucceeds(getDoc(doc(ctx('guest').firestore(),'notifications','private')));
+ await assertFails(getDoc(doc(ctx('presenter').firestore(),'notifications','private')));
+});
+test('saved programme and read markers belong to their owner',async()=>{
+ const db=ctx('guest').firestore();
+ await assertSucceeds(setDoc(doc(db,'users','guest','savedSessions','one'),{savedAt:serverTimestamp()}));
+ await assertFails(getDocs(collection(ctx('presenter').firestore(),'users','guest','savedSessions')));
+ await assertSucceeds(setDoc(doc(db,'users','guest','notificationReads','private'),{readAt:serverTimestamp()}));
+ await assertFails(setDoc(doc(db,'users','guest','notificationReads','targeted'),{readAt:serverTimestamp()}));
+});

@@ -105,3 +105,13 @@ Ako su radovi ranije bili predani putem Storagea, autor treba ponovno predati po
 ## Prije javnog otvaranja registracija
 
 Organizator treba potvrditi konačne rokove i upute za radove, satnicu, izlagače i fotografije, sponzore/pakete, službeni predložak potvrde te obavijest o privatnosti s rokovima čuvanja podataka. Te stavke nisu izmišljene ili prikazane kao potvrđene. Nema uključene analitike, newsletter prijave ni plaćanja. Cijene sponzorstava nisu objavljene jer se dostavljeni izvori razlikuju.
+
+## Obavijesti, osobni program i PWA
+
+Administratori u kartici Obavijesti objavljuju poruke svima, ulozi ili odabranim odobrenim sudionicima. Uređivač podržava osnovno oblikovanje i poveznice; sadržaj se sanitizira pri unosu i prikazu. Firestore pravila ograničavaju čitanje na primatelje. Nakon ove nadogradnje ponovno objavite firestore.rules.
+
+Sudionici spremaju sesije u Moj program. Google Calendar otvara pripremljen događaj koji korisnik sam sprema; naknadne promjene programa ne sinkroniziraju se s njegovim kalendarom. Admin može uređivati naziv, satnicu i dvoranu te izvesti filtrirani popis sudionika u CSV.
+
+PWA se instalira gumbom u podnožju ili iz izbornika preglednika (iPhone: Share → Add to Home Screen). Ikona koristi originalni PILC znak. Brojač u portalu radi putem Firestore pretplate, a broj na instaliranoj ikoni koristi Badging API gdje je podržan. Nema pozadinskih push obavijesti: kad je aplikacija zatvorena, novi broj nije zajamčen. Gumb za uključivanje oznake traži dopuštenje samo na podržanim uređajima.
+
+Service worker sprema samo offline zaslon i ikone; osobni podaci i Firebase odgovori ne spremaju se u njegovu predmemoriju. Za portal je potrebna internetska veza. Nisu potrebni Firebase Storage ni servis za slanje e-pošte.

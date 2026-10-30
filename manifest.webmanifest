@@ -1,0 +1,21 @@
+{
+  "id": "./",
+  "name": "PILC 2027 — Conference Portal",
+  "short_name": "PILC 2027",
+  "description": "Your programme, announcements and conference badge. Vaš program, obavijesti i akreditacija.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#112d50",
+  "theme_color": "#112d50",
+  "lang": "en",
+  "icons": [
+    {"src":"assets/icons/icon-192.png","sizes":"192x192","type":"image/png","purpose":"any"},
+    {"src":"assets/icons/icon-512.png","sizes":"512x512","type":"image/png","purpose":"any"},
+    {"src":"assets/icons/maskable-512.png","sizes":"512x512","type":"image/png","purpose":"maskable"}
+  ],
+  "shortcuts": [
+    {"name":"My programme / Moj program","url":"./#my-programme"},
+    {"name":"Announcements / Obavijesti","url":"./#notifications"}
+  ]
+}
