@@ -1,9 +1,8 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, signOut, setPersistence, browserLocalPersistence, browserSessionPersistence, reload } from 'firebase/auth';
 import { getFirestore, doc, setDoc, getDoc, updateDoc, onSnapshot, collection, getDocs, addDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
-import { getStorage, ref, uploadBytes, getBytes } from 'firebase/storage';
 import { firebaseConfig } from './config.js';
-const app=initializeApp(firebaseConfig), auth=getAuth(app), db=getFirestore(app), storage=getStorage(app);
+const app=initializeApp(firebaseConfig), auth=getAuth(app), db=getFirestore(app);
 export const api={
   setLanguage: language=>{auth.languageCode=language;},
   observeAuth: cb=>onAuthStateChanged(auth,cb),
@@ -30,10 +29,8 @@ export const api={
   updateUser: (uid,data)=>updateDoc(doc(db,'users',uid),{...data,updatedAt:serverTimestamp()}),
   async submission(){const d=await getDoc(doc(db,'submissions',auth.currentUser.uid));return d.exists()?d.data():null;},
   async submissions(){return (await getDocs(collection(db,'submissions'))).docs.map(d=>({id:d.id,...d.data()}));},
-  async submit(data,file){const uid=auth.currentUser.uid; if(file)await uploadBytes(ref(storage,`papers/${uid}/paper.pdf`),file,{contentType:'application/pdf'});await setDoc(doc(db,'submissions',uid),{...data,ownerId:uid,status:'submitted',updatedAt:serverTimestamp()});},
+  async submit(data){const uid=auth.currentUser.uid;await setDoc(doc(db,'submissions',uid),{...data,ownerId:uid,status:'submitted',updatedAt:serverTimestamp()});},
   review: (uid,status)=>updateDoc(doc(db,'submissions',uid),{status,updatedAt:serverTimestamp()}),
-  paper: uid=>getBytes(ref(storage,`papers/${uid}/paper.pdf`),10*1024*1024),
   async certificateSettings(){const d=await getDoc(doc(db,'settings','certificates'));return d.exists()?d.data():null;},
-  async saveCertificate(data,file){if(file)await uploadBytes(ref(storage,'templates/certificate.pdf'),file,{contentType:'application/pdf'});await setDoc(doc(db,'settings','certificates'),data);},
-  certificateTemplate: ()=>getBytes(ref(storage,'templates/certificate.pdf'),10*1024*1024)
+  async saveCertificate(data){await setDoc(doc(db,'settings','certificates'),data);}
 };

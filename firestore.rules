@@ -54,8 +54,9 @@ service cloud.firestore {
       allow delete: if admin();
     }
     function validSubmission(d,uid) {
-      return d.keys().hasOnly(['title','authors','abstract','ownerId','status','updatedAt'])
+      return d.keys().hasOnly(['title','authors','abstract','paperUrl','ownerId','status','updatedAt'])
         && d.ownerId == uid && str(d.title,1,250) && str(d.authors,1,500) && str(d.abstract,1,5000)
+        && str(d.paperUrl,8,2000) && d.paperUrl.matches('^https://[^ ].*')
         && d.status in ['submitted','accepted','revision','rejected'] && d.updatedAt == request.time;
     }
     match /submissions/{uid} {
@@ -70,10 +71,12 @@ service cloud.firestore {
     }
     match /settings/certificates {
       allow read: if active();
-      allow create, update: if admin() && request.resource.data.keys().hasOnly(['x','y','fontSize','published','hasTemplate'])
+      allow create, update: if admin() && request.resource.data.keys().hasOnly(['x','y','fontSize','published','hasTemplate','templatePath'])
         && request.resource.data.x is number && request.resource.data.x >= 10 && request.resource.data.x <= 90
         && request.resource.data.y is number && request.resource.data.y >= 10 && request.resource.data.y <= 90
         && request.resource.data.fontSize is number && request.resource.data.fontSize >= 10 && request.resource.data.fontSize <= 60
+        && str(request.resource.data.templatePath,1,200)
+        && request.resource.data.templatePath.matches('^assets/documents/[A-Za-z0-9_-]+[.]pdf$')
         && request.resource.data.published is bool && request.resource.data.hasTemplate == true;
       allow delete: if false;
     }

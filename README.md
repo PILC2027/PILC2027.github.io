@@ -6,13 +6,13 @@ Dvojezični portal (EN/HR), responzivan za mobitel i računalo, sa svijetlom i t
 
 - Firebase Authentication: e-mail/lozinka, registracija, reset lozinke, opcija pamćenja prijave, odjava.
 - Novi korisnik uvijek dobiva `role: guest` i `status: pending`. Odabrana uloga izlagača je samo zahtjev. Administrator odobrava pristup i dodjeljuje uloge.
-- Firestore i Storage pravila provjeravaju ovlasti neovisno o prikazu stranice.
+- Firestore pravila provjeravaju ovlasti neovisno o prikazu stranice.
 - Profil: ime, prezime, titula, ustanova; digitalna akreditacija s automatskim podacima i PDF preuzimanjem.
-- Automatske PDF potvrde: administrator učita predložak i odredi položaj imena. Za svakog sudionika umeću se ime i prezime iz profila. Podržani su hrvatski znakovi.
-- Konačna potvrda dostupna je od **21. 3. 2027. u 00:00 po vremenu Zagreba**, samo uz odobren račun, evidentiranu prisutnost i objavljen predložak. Storage provjerava vrijeme poslužitelja. Demo potvrda dostupna je ranije, vidljivo označena kao neslužbena.
+- Automatske PDF potvrde: administrator doda predložak u repozitorij i odredi položaj imena. Za svakog sudionika umeću se ime i prezime iz profila. Podržani su hrvatski znakovi.
+- Konačna potvrda dostupna je od **21. 3. 2027. u 00:00 po vremenu Zagreba**, samo uz odobren račun, evidentiranu prisutnost i objavljen predložak. Datum provjerava aplikacija. Prazan predložak na GitHub Pagesu je javan; ovo nije poslužiteljska zaštita javne datoteke. Demo potvrda dostupna je ranije, vidljivo označena kao neslužbena.
 - Admin: odobrenje/ukidanje pristupa, dodjela uloga, prisutnost, pretraživanje sudionika, unos/uređivanje/brisanje sesija i izlagača, pregled radova, postavke potvrda.
 - Program: demo satnica i primjeri panela; administratori mogu učitati demo u bazu i urediti ga ili unositi vlastiti raspored.
-- Predaja radova: PDF do 10 MB, naslov, autori, sažetak. Samo odobreni izlagači i administratori. Izmjena rada vraća status na pregled.
+- Predaja radova: HTTPS poveznica na PDF, naslov, autori, sažetak. Autor omogućuje pristup datoteci organizatoru (conference@par.hr). Portal ne prima datoteke; pohranjuje poveznicu. Samo odobreni izlagači i administratori. Izmjena rada vraća status na pregled.
 
 ## 1. Postavite Firebase
 
@@ -21,26 +21,17 @@ Projekt je `pilc2027`. Web konfiguracija je već unesena u `src/config.js`. Fire
 1. U [Firebase konzoli](https://console.firebase.google.com/project/pilc2027/overview) uključite **Authentication → Sign-in method → Email/Password**.
 2. U **Authentication → Settings → Authorized domains** dodajte `pilc2027.github.io`, a za lokalni pregled i `localhost` te `127.0.0.1`.
 3. Napravite **Cloud Firestore Standard** bazu `(default)` u zaključanom načinu. Aplikacija koristi Firestore, **ne Realtime Database**.
-4. Uključite **Cloud Storage**, bucket `pilc2027.firebasestorage.app`. Firebase može tražiti aktivaciju naplate za Storage; to treba postaviti vlasnik projekta.
-5. Objavite pravila iz `firestore.rules` i `storage.rules` u odgovarajućim Rules karticama konzole, ili prijavljeni vlasnik projekta može pokrenuti:
+4. Objavite pravila iz `firestore.rules` u **Firestore → Rules**, ili prijavljeni vlasnik projekta može pokrenuti:
 
    ```powershell
    npm ci
    npx firebase login
-   npx firebase deploy --only firestore:rules,storage --project pilc2027
+   npx firebase deploy --only firestore:rules --project pilc2027
    ```
 
-   Storage pravila čitaju Firestore profile. Ako Firebase zatraži omogućavanje ovlasti za povezivanje Storage i Firestore, prihvatite to u konzoli. Za eventualni Realtime Database priložen je `database.rules.json` koji odbija sav pristup; aplikacija ga ne koristi.
+5. Uredite Firebase e-mail za reset lozinke. Registracija ne šalje potvrdu e-maila; dovoljno je administratorsko odobrenje.
 
-6. Za preuzimanje PDF-ova kroz SDK postavite CORS na bucketu (Cloud Shell ili računalo s prijavljenim Google Cloud CLI-jem):
-
-   ```sh
-   gcloud storage buckets update gs://pilc2027.firebasestorage.app --cors-file=storage-cors.json
-   ```
-
-   CORS uključuje GitHub Pages domenu i lokalni pregled. Za drugu domenu ažurirajte datoteku. Ne koriste se trajne javne download poveznice koje bi zaobišle vremensko zaključavanje.
-
-7. Uredite predložak Firebase e-maila za reset lozinke, naziv pošiljatelja i podršku. Preporučena minimalna lozinka: 8 znakova. Predložak poruke konfigurira se u Firebase konzoli; aplikacija ne šalje obavijesti o odobrenju računa.
+**Firebase Storage nije potreban i aplikacija ga ne koristi.** Nema Storage pravila, CORS postavljanja ni uploada datoteka. Firebase Auth i Firestore ostaju za račune, sadržaj i ovlasti; njihove kvote i uvjeti i dalje vrijede.
 
 ## 2. Prvi administrator
 
@@ -77,19 +68,27 @@ npm test
 npm run test:rules
 ```
 
-Testovi pravila traže Java 21+ na PATH-u. Koriste izolirani `demo-pilc` emulator, ne produkciju. UI testovi koriste zasebni API samo unutar testnog preglednika, a završni smoke test učitava produkcijski Firebase SDK. Provjeravaju forme, čekanje odobrenja, uloge, radove, admin uređivanje, PDF preuzimanje, oba jezika/teme i širine 390/1440 px. Rezultati i snimke su u ignoriranoj `tests/generated/` mapi.
+Testovi pravila traže Java 21+ na PATH-u. Koriste izolirani `demo-pilc` emulator, ne produkciju. UI testovi koriste zasebni API samo unutar testnog preglednika, a završni smoke test učitava produkcijski Firebase SDK. Provjeravaju forme, čekanje odobrenja, uloge, radove, admin uređivanje, predaju poveznica, PDF preuzimanje, oba jezika/teme i širine 390/1440 px. Rezultati i snimke su u ignoriranoj `tests/generated/` mapi.
 
-**Granica provjere:** lokalni UI i Firebase pravila provjereni su odvojeno. Produkcijska registracija, dostava e-mailova i Storage CORS ne mogu biti potvrđeni bez postavljanja projekta i stvarnog korisničkog računa. Pravila nisu automatski objavljena u produkciju.
+**Granica provjere:** lokalni UI i Firebase pravila provjereni su odvojeno. Produkcijska registracija, dostava e-mailova za reset lozinke ne mogu biti potvrđeni bez postavljanja projekta i stvarnog korisničkog računa. Pravila nisu automatski objavljena u produkciju.
 
-## Potvrde — kako koristiti
+## PDF-ovi na GitHub Pagesu
 
-1. **Admin → Certificates** nudi prazan ogledni PDF predložak u PILC bojama i personalizirani demo. Demo uvijek nosi oznaku `DEMO`.
-2. Za službeno izdavanje učitajte odobreni PDF s praznom crtom za ime. Koristite obični, nešifrirani PDF. Službeni potpis organizatora, ako treba, mora biti dio predloška.
-3. X je centar imena od lijevog ruba; Y je osnovna crta teksta od gornjeg ruba. Obje vrijednosti su postotci stranice. Zadano X=50, Y=51, slova 30 pt, prilagođeno demo predlošku. Duga imena automatski se smanjuju.
-4. **Preview with my name** daje neslužbeni pregled trenutačnog predloška i koordinata prije spremanja.
-5. Spremite i uključite objavu; u popisu sudionika potvrdite stvarnu prisutnost. Nakon datuma otključavanja svaki sudionik preuzima svoj PDF.
+- Ogledni prazan PDF već je u `assets/documents/certificate-demo.pdf`, s oznakom DEMO.
+- Gotovi osobni PDF-ovi **ne spremaju se u GitHub ni Firebase**; stvaraju se i preuzimaju u pregledniku.
+- Za službeni predložak stavite PDF s praznom crtom za ime u `assets/documents/certificate-template.pdf`, commitajte/pushajte i pričekajte objavu GitHub Pagesa.
+- **Admin → Certificates → Template path**: unesite `assets/documents/certificate-template.pdf`. Naziv datoteke smije sadržavati slova bez dijakritike, brojeve, `_` i `-`. PDF do 10 MB, nešifriran.
+- X je centar imena od lijevog ruba; Y je osnovna crta teksta od gornjeg ruba, u postotcima. Zadano X=50, Y=51 i 30 pt odgovara demo predlošku. Duga imena automatski se smanjuju.
+- **Preview with my name** provjerava PDF i prikazuje primjer s vašim imenom prije spremanja postavki. Naziv/putanja i postavke spremaju se u Firestore; PDF se učitava sa stranice.
+- Spremite i uključite objavu, evidentirajte prisutnost sudionika. Aplikacija prikazuje gumb za službenu potvrdu tek od 21. 3. 2027. i uz odobren račun/potvrđenu prisutnost.
 
-Umetanje imena je na prvoj stranici; ostale stranice zadržavaju se. To je personalizacija dokumenta, a ne kriptografski potpis ili sustav provjere vjerodostojnosti. Ime dolazi iz profila i korisnik ga može urediti. Ako trebate pravno/verifikacijski strogo izdavanje s nepromjenjivim podacima, potreban je zaseban poslužiteljski sustav izdavanja.
+**Važno za ovaj način hostanja:** sve datoteke na GitHub Pagesu su javne, uključujući prazan predložak. Datum zaključava gumb unutar aplikacije, ne pristup javnom PDF-u. Ne stavljajte privatne radove ili osobne potvrde u repozitorij. Personalizacija nije digitalni potpis niti sustav provjere autentičnosti.
+
+## Radovi bez uploada
+
+Izlagač unosi naslov, autore, sažetak i HTTPS poveznicu na PDF na svom Driveu, OneDriveu ili drugom spremištu. Treba omogućiti pristup `conference@par.hr`. Poveznicu u portalu mogu vidjeti samo autor i administratori, dok pristup samoj datoteci određuje njezin pružatelj. Administrator otvara poveznicu i postavlja status pregleda. GitHub Pages ne prima privatne uploadove iz korisničkih obrazaca.
+
+Ako su radovi ranije bili predani putem Storagea, autor treba ponovno predati poveznicu. Stare datoteke u Firebase projektu ne brišu se ovom izmjenom; aplikacija ih više ne dohvaća.
 
 ## Sadržaj i izvori
 
@@ -100,7 +99,7 @@ Umetanje imena je na prvoj stranici; ostale stranice zadržavaju se. To je perso
 - [Fotografija hotela s postojeće PILC stranice](https://par-conference.com/wp-content/uploads/2026/01/hotel-hilt-landing-1536x737.png) koristi se kao zasebna fotografija, a ne kao zalijepljena pozivnica.
 - [Arhivska fotografija PILC 2023](https://par-conference.com/wp-content/uploads/2023/06/Konferencija-PAR-PILC-2023-1-1024x682.jpg) jasno je označena godinom. Nije predstavljena kao fotografija 2027. godine.
 - Referenca za preglednu strukturu profila i digitalne akreditacije: [Web Summit attendee app](https://websummit.com/blog/how-to/mobile-app-tech-event-guide-tickets/).
-- [Firebase rules](https://firebase.google.com/docs/rules), [testiranje pravila](https://firebase.google.com/docs/firestore/security/test-rules-emulator), [preuzimanje datoteka i CORS](https://firebase.google.com/docs/storage/web/download-files).
+- [Firebase rules](https://firebase.google.com/docs/rules), [testiranje pravila](https://firebase.google.com/docs/firestore/security/test-rules-emulator).
 - Noto Sans i Lato koriste SIL Open Font License; licence su u `assets/`. Za PDF se koristi statični Lato radi ispravnog prikaza hrvatskih znakova.
 
 ## Prije javnog otvaranja registracija

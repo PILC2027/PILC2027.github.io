@@ -14,6 +14,6 @@ export const api={
  async sessions(){return [...sessions];},async addSession(data){sessions.push({...data,id:'session-'+sessions.length});},async editSession(id,data){sessions=sessions.map(s=>s.id===id?{...s,...data}:s);},async removeSession(id){sessions=sessions.filter(s=>s.id!==id);},
  async presenters(){return [...presenters];},async addPresenter(data){presenters.push({...data,id:'presenter-'+presenters.length});},async editPresenter(id,data){presenters=presenters.map(p=>p.id===id?{...p,...data}:p);},async removePresenter(id){presenters=presenters.filter(p=>p.id!==id);},
  async users(){return [...users];},async updateUser(uid,data){users=users.map(u=>u.id===uid?{...u,...data}:u);},
- async submissions(){return [...submissions];},async submission(){return submission;},async submit(data){submission={...data,status:'submitted'};},async review(){},async paper(){return new Uint8Array();},
- async certificateSettings(){return settings;},async saveCertificate(data){settings=data;},async certificateTemplate(){throw {code:'storage/unauthorized'};}
+ async submissions(){return [...submissions];},async submission(){return submission;},async submit(data){submission={...data,status:'submitted'};},async review(){},
+ async certificateSettings(){return settings;},async saveCertificate(data){settings=data;}
 };
