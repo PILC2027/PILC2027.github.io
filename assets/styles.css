@@ -46,8 +46,8 @@ body:has(main.page){
   background-color:#f5f8fc;
   background-image:
     radial-gradient(circle at 1px 1px,#112d5010 1px,transparent 1.3px),
-    radial-gradient(ellipse at 8% 25%,transparent 48%,#368dcc07 48.2%,#368dcc07 59%,transparent 59.2%,transparent 66%,#368dcc06 66.2%,#368dcc06 70%,transparent 70.2%),
-    radial-gradient(ellipse at 94% 72%,transparent 43%,#ffa51109 43.2%,#ffa51109 53%,transparent 53.2%,transparent 63%,#ffa51106 63.2%,#ffa51106 67%,transparent 67.2%),
+    radial-gradient(ellipse at 8% 25%,transparent 48%,#368dcc0c 48.2%,#368dcc0c 59%,transparent 59.2%,transparent 66%,#368dcc0a 66.2%,#368dcc0a 70%,transparent 70.2%),
+    radial-gradient(ellipse at 94% 72%,transparent 43%,#ffa51110 43.2%,#ffa51110 53%,transparent 53.2%,transparent 63%,#ffa5110b 63.2%,#ffa5110b 67%,transparent 67.2%),
     linear-gradient(125deg,#eaf2fa80,transparent 45%,#fff6e960);
   background-size:28px 28px,1100px 1000px,1300px 1200px,100% 100%;
   background-repeat:repeat;
@@ -57,7 +57,7 @@ body:has(main.page){
   background-color:var(--bg);
   background-image:
     radial-gradient(circle at 1px 1px,#a9cbea13 1px,transparent 1.3px),
-    radial-gradient(ellipse at 8% 25%,transparent 48%,#368dcc0a 48.2%,#368dcc0a 59%,transparent 59.2%,transparent 66%,#368dcc07 66.2%,#368dcc07 70%,transparent 70.2%),
-    radial-gradient(ellipse at 94% 72%,transparent 43%,#ffa51107 43.2%,#ffa51107 53%,transparent 53.2%,transparent 63%,#ffa51105 63.2%,#ffa51105 67%,transparent 67.2%),
+    radial-gradient(ellipse at 8% 25%,transparent 48%,#368dcc10 48.2%,#368dcc10 59%,transparent 59.2%,transparent 66%,#368dcc0c 66.2%,#368dcc0c 70%,transparent 70.2%),
+    radial-gradient(ellipse at 94% 72%,transparent 43%,#ffa5110c 43.2%,#ffa5110c 53%,transparent 53.2%,transparent 63%,#ffa51109 63.2%,#ffa51109 67%,transparent 67.2%),
     linear-gradient(125deg,#16335240,transparent 60%);
 }
