@@ -39,8 +39,8 @@ export async function badge(profile,role){
   const logo=await pdf.embedPng(await bytes('assets/pilc-logo.png'));
   page.drawImage(logo,{x:20,y:382,width:320,height:111});
   page.drawRectangle({x:0,y:0,width:360,height:155,color:navy});
-  page.drawEllipse({x:40,y:35,xScale:280,yScale:110,borderWidth:35,borderColor:rgb(.231,.561,.839)});
-  page.drawEllipse({x:330,y:-20,xScale:140,yScale:155,borderWidth:26,borderColor:gold});
+  page.drawRectangle({x:0,y:149,width:360,height:6,color:rgb(.231,.561,.839)});
+  page.drawRectangle({x:0,y:149,width:85,height:6,color:gold});
   
   center(page,font,'PILC 2027 · AKREDITACIJA / BADGE',335,10,navy);
   center(page,font,profile.title||'',280,14,muted);

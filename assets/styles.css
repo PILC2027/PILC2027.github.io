@@ -49,3 +49,8 @@ body:has(main.page){
 .badge-body>p{color:#607187}
 .brand-sectors{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}
 .brand-sectors span{border:1px solid var(--line);border-radius:5px;padding:8px 12px;background:var(--card);font-size:12px}
+.badge-footer{position:relative;background:#0b2d5b;color:#fff;padding:25px 20px 20px;border:0;border-radius:0 0 6px 6px;font-size:11px;line-height:1.9;letter-spacing:.035em;min-height:100px}
+.badge-footer:before{content:'';position:absolute;inset:0 0 auto;height:5px;background:linear-gradient(90deg,#f5a623 0 25%,#3b8fd6 25% 100%)}
+.badge-footer svg{width:25px;height:25px;color:#f5a623;margin-left:14px}
+.badge-role{background:#edf4fb;border:1px solid #d9e6f3;font-weight:700}
+.badge-body>p:not(.badge-title){color:#607187}
