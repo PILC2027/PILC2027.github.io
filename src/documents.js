@@ -38,19 +38,20 @@ export async function badge(profile,role){
   const {pdf,font}=await setup();const page=pdf.addPage([360,510]);
   const logo=await pdf.embedPng(await bytes('assets/pilc-logo.png'));
   page.drawImage(logo,{x:20,y:382,width:320,height:111});
-  page.drawRectangle({x:0,y:0,width:360,height:155,color:navy});
-  page.drawRectangle({x:0,y:149,width:360,height:6,color:rgb(.231,.561,.839)});
-  page.drawRectangle({x:0,y:149,width:85,height:6,color:gold});
-  
-  center(page,font,'PILC 2027 · AKREDITACIJA / BADGE',335,10,navy);
-  center(page,font,profile.title||'',280,14,muted);
-  center(page,font,profile.firstName,242,30,navy);
-  center(page,font,profile.lastName,201,30,navy);
-  center(page,font,profile.affiliation,173,13,muted);
-  center(page,font,role.toUpperCase(),114,13,gold);
-  center(page,font,'WHERE LEADERS MEET FUTURE LEADERS',86,10,rgb(1,1,1));
-  center(page,font,'18–20 MARCH 2027 · RIJEKA / OPATIJA',62,10,rgb(1,1,1));
-  center(page,font,`ID: ${profile.id}`,34,8,rgb(.8,.86,.93));
+  // Wave artwork stays below the personal details, with a solid slogan area.
+  page.drawRectangle({x:0,y:0,width:360,height:120,color:navy});
+  page.drawEllipse({x:65,y:115,xScale:230,yScale:72,color:rgb(.231,.561,.839)});
+  page.drawEllipse({x:270,y:70,xScale:125,yScale:100,color:gold});
+  page.drawEllipse({x:65,y:20,xScale:240,yScale:128,color:navy});
+  center(page,font,profile.title||'',345,12,muted);
+  center(page,font,profile.firstName,310,29,navy);
+  center(page,font,profile.lastName,274,29,navy);
+  center(page,font,role.toUpperCase(),240,12,navy);
+  center(page,font,profile.affiliation||'',213,12,muted);
+  page.drawText('WHERE LEADERS MEET',{x:24,y:78,size:13,font,color:rgb(1,1,1)});
+  page.drawText('FUTURE LEADERS',{x:24,y:56,size:17,font,color:gold});
+  page.drawText('18–20 MARCH 2027 · RIJEKA / OPATIJA',{x:24,y:30,size:8,font,color:rgb(1,1,1)});
+  center(page,font,`ID: ${profile.id}`,10,6,rgb(.8,.86,.93));
   return pdf.save();
 }
 export function download(data,name,type='application/pdf'){const url=URL.createObjectURL(new Blob([data],{type}));const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),60000);}
