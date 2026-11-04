@@ -38,6 +38,7 @@ export const api={
   async submission(){const d=await getDoc(doc(db,'submissions',auth.currentUser.uid));return d.exists()?d.data():null;},
   async submissions(){return (await getDocs(collection(db,'submissions'))).docs.map(d=>({id:d.id,...d.data()}));},
   async submit(data){const uid=auth.currentUser.uid;await setDoc(doc(db,'submissions',uid),{...data,ownerId:uid,status:'submitted',updatedAt:serverTimestamp()});},
+  reviewFee: (uid,feeStatus)=>updateDoc(doc(db,'submissions',uid),{feeStatus,updatedAt:serverTimestamp()}),
   review: (uid,status)=>updateDoc(doc(db,'submissions',uid),{status,updatedAt:serverTimestamp()}),
   async certificateSettings(){const d=await getDoc(doc(db,'settings','certificates'));return d.exists()?d.data():null;},
   async saveCertificate(data){await setDoc(doc(db,'settings','certificates'),data);}

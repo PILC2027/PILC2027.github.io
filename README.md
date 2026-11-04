@@ -115,3 +115,9 @@ Sudionici spremaju sesije u Moj program. Google Calendar otvara pripremljen doga
 PWA se instalira gumbom u podnožju ili iz izbornika preglednika (iPhone: Share → Add to Home Screen). Ikona koristi originalni PILC znak. Brojač u portalu radi putem Firestore pretplate, a broj na instaliranoj ikoni koristi Badging API gdje je podržan. Nema pozadinskih push obavijesti: kad je aplikacija zatvorena, novi broj nije zajamčen. Gumb za uključivanje oznake traži dopuštenje samo na podržanim uređajima.
 
 Service worker sprema samo offline zaslon i ikone; osobni podaci i Firebase odgovori ne spremaju se u njegovu predmemoriju. Za portal je potrebna internetska veza. Nisu potrebni Firebase Storage ni servis za slanje e-pošte.
+
+## Prijava radova i kotizacije
+
+Stranica prikazuje referentne cijene iz dostavljenog poziva: 240/370/480 EUR za ranu prijavu te 300/430/540 EUR redovno (PDV uključen). Potvrda cijena i rokova za 2027. još se očekuje; rokovi iz 2026. nisu preneseni. Profesori PAR-a mogu zatražiti oslobođenje; admin odluku potvrđuje u kartici Radovi, zasebno od statusa rada.
+
+Obrazac pohranjuje podatke autora, ustanove, računa, kontakta, vrstu registracije, način plaćanja, 1–5 ključnih riječi i sažetak do 400 riječi. PDF poveznica je neobavezna pri predaji sažetka. Podaci su privatni za autora i administratore. Ponovno slanje vraća provjeru kotizacije na čekanje. Portal ne naplaćuje i ne šalje automatsku e-poštu. Nakon nadogradnje obavezno objaviti firestore.rules.

@@ -40,3 +40,16 @@ test('five-day programme allows unknown times but rejects partial times',async()
  await assertFails(setDoc(doc(ctx('admin').firestore(),'sessions','partial'),{...row,time:'09:00'}));
  await assertFails(setDoc(doc(ctx('guest').firestore(),'sessions','forged-academy'),row));
 });
+test('registration data and PAR fee waiver are validated and admin-controlled',async()=>{
+ const registration={institution:'PAR',address:'Test 1',city:'Rijeka',country:'Croatia',vat:'',contactEmail:'test@example.com',phone:'123',registrationType:'par',payingAs:'person',keywords:'Leadership,Education',termsAccepted:true};
+ const row={title:'Research',authors:'Ana',abstract:'A short abstract',paperUrl:'',ownerId:'presenter',status:'submitted',updatedAt:serverTimestamp(),registration,feeStatus:'pending'};
+ const ref=doc(ctx('presenter').firestore(),'submissions','presenter');
+ await assertSucceeds(setDoc(ref,row));
+ await assertFails(updateDoc(ref,{feeStatus:'approved',updatedAt:serverTimestamp()}));
+ await assertFails(setDoc(ref,{...row,registration:{...registration,termsAccepted:false}}));
+ await assertFails(setDoc(ref,{...row,registration:{...registration,keywords:'a,b,c,d,e,f'}}));
+ await assertFails(setDoc(ref,{...row,abstract:Array(401).fill('word').join(' ')}));
+ await assertFails(setDoc(ref,{...row,registration:{...registration,payingAs:'company'}}));
+ await assertSucceeds(updateDoc(doc(ctx('admin').firestore(),'submissions','presenter'),{feeStatus:'approved',updatedAt:serverTimestamp()}));
+ await assertFails(getDoc(doc(ctx('guest').firestore(),'submissions','presenter')));
+});

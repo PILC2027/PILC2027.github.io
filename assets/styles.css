@@ -73,3 +73,12 @@ body:has(main.page){
 .two-column>*,.admin-content-grid>*,.profile-grid>*{min-width:0}
 .programme-tabs{max-width:100%;width:100%}
 @media(max-width:700px){.programme-tabs>button{min-width:0;padding:10px 4px;font-size:10px}.programme-tabs strong{font-size:11px}.programme-tabs{gap:3px}}
+.fee-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-top:24px}
+.fee-card{display:flex;flex-direction:column;align-items:flex-start;gap:12px;margin:0}
+.fee-card p{margin:0}.fee-card .btn{margin-top:auto}.fee-price{font-size:32px;color:var(--text)}
+.registration-details{display:grid;grid-template-columns:minmax(100px,1fr) 2fr;gap:10px}
+.registration-details dt{font-weight:600}.registration-details dd{margin:0;overflow-wrap:anywhere}
+#paper-form{margin-top:24px}#paper-form .check-label a{text-decoration:underline}
+@media(max-width:1000px){.fee-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:550px){.fee-grid{grid-template-columns:1fr}.registration-details{grid-template-columns:1fr}.registration-details dd{margin-bottom:8px}}
+@media(max-width:600px){#paper-form .form-grid{grid-template-columns:1fr}}

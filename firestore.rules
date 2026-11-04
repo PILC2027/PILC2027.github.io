@@ -53,19 +53,33 @@ service cloud.firestore {
       allow create, update: if admin() && validPresenter(request.resource.data);
       allow delete: if admin();
     }
+    function validRegistration(r) {
+      return r.keys().hasAll(['institution','address','city','country','vat','contactEmail','phone','registrationType','payingAs','keywords','termsAccepted'])
+        && r.keys().hasOnly(['institution','address','city','country','vat','contactEmail','phone','registrationType','payingAs','keywords','termsAccepted'])
+        && str(r.institution,1,250) && str(r.address,1,250) && str(r.city,1,120) && str(r.country,1,250)
+        && str(r.vat,0,80) && (r.payingAs != 'company' || r.vat.size() > 0)
+        && str(r.contactEmail,3,254) && r.contactEmail.matches('^[^ @]+@[^ @]+[.][^ @]+$')
+        && str(r.phone,1,80) && r.registrationType in ['one','two','three','par']
+        && r.payingAs in ['company','person'] && str(r.keywords,1,500) && r.keywords.split(',').size() <= 5
+        && r.termsAccepted == true;
+    }
     function validSubmission(d,uid) {
-      return d.keys().hasOnly(['title','authors','abstract','paperUrl','ownerId','status','updatedAt'])
-        && d.ownerId == uid && str(d.title,1,250) && str(d.authors,1,500) && str(d.abstract,1,5000)
-        && str(d.paperUrl,8,2000) && d.paperUrl.matches('^https://[^ ].*')
+      return d.keys().hasOnly(['title','authors','abstract','paperUrl','ownerId','status','updatedAt','registration','feeStatus'])
+        && d.ownerId == uid && str(d.title,1,250) && str(d.authors,1,500) && str(d.abstract,1,12000)
+        && str(d.paperUrl,0,2000) && (d.paperUrl == '' || d.paperUrl.matches('^https://[^ ].*'))
+        && (!('registration' in d) || (validRegistration(d.registration) && d.abstract.split('\\s+').size() <= 400))
+        && (!('feeStatus' in d) || d.feeStatus in ['pending','approved','rejected'])
         && d.status in ['submitted','accepted','revision','rejected'] && d.updatedAt == request.time;
     }
     match /submissions/{uid} {
       allow get: if (active() && owner(uid)) || admin();
       allow list: if admin();
-      allow create: if owner(uid) && presenter() && validSubmission(request.resource.data,uid) && request.resource.data.status == 'submitted';
+      allow create: if owner(uid) && presenter() && validSubmission(request.resource.data,uid)
+        && request.resource.data.status == 'submitted' && request.resource.data.get('feeStatus','pending') == 'pending';
       allow update: if validSubmission(request.resource.data,uid) && (
-        (owner(uid) && presenter() && request.resource.data.status == 'submitted')
-        || (admin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','updatedAt']))
+        (owner(uid) && presenter() && request.resource.data.status == 'submitted'
+          && request.resource.data.get('feeStatus','pending') == 'pending')
+        || (admin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','feeStatus','updatedAt']))
       );
       allow delete: if false;
     }

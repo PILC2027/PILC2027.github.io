@@ -20,7 +20,7 @@ test('profile changes update badge, certificate is locked, PDF handles Croatian 
  event=page.waitForEvent('download');await page.getByRole('button',{name:'Download badge'}).click();file=await event;await file.saveAs('tests/generated/badge.pdf');await page.screenshot({path:'tests/generated/profile-desktop.png',fullPage:true,animations:'disabled'});
  await page.goto('/?test=guest#admin');await expect(page.getByRole('heading',{name:'Administrator access required'})).toBeVisible();
 });
-test('presenter can submit a PDF link and update metadata',async({page})=>{await open(page,'presenter','#papers');await page.getByLabel('Paper title').fill('Leadership research');await page.getByLabel('Abstract').fill('Research into future leadership.');await page.getByLabel('Link to your PDF paper').fill('https://example.com/paper.pdf');await page.getByRole('button',{name:'Submit paper',exact:true}).click();await expect(page.getByRole('button',{name:'Resubmit paper'})).toBeVisible();});
+test('presenter can submit a PDF link and update metadata',async({page})=>{await open(page,'presenter','#papers');await fillRegistration(page);await page.getByLabel('Paper title').fill('Leadership research');await page.getByLabel('Abstract').fill('Research into future leadership.');await page.getByLabel('Link to your PDF paper').fill('https://example.com/paper.pdf');await page.getByRole('button',{name:'Submit paper',exact:true}).click();await expect(page.getByRole('button',{name:'Resubmit paper'})).toBeVisible();});
 test('admin approves users and can add, edit and delete programme and presenters',async({page})=>{
  await open(page,'admin','#admin');await page.getByRole('button',{name:'Approve',exact:true}).click();await expect(page.locator('tr').filter({hasText:'Ana Horvat'}).locator('.pill')).toHaveText('Approved');await expect(page.locator('tr').filter({hasText:'Ana Horvat'}).locator('select')).toHaveValue('presenter');
  await page.locator('[data-admin-tab=programme]').click();await page.getByLabel('Title · English').fill('New session');await page.getByLabel('Title · Croatian').fill('Nova sesija');await page.getByLabel('Format (EN / HR)').fill('Panel');await page.getByLabel('Start',{exact:true}).fill('09:00');await page.getByLabel('End',{exact:true}).fill('10:00');await page.getByLabel('Room (EN / HR)').fill('A');await page.getByRole('button',{name:'Save session'}).click();await expect(page.locator('.admin-item h3')).toHaveText('New session');await page.getByRole('button',{name:'Edit',exact:true}).click();await page.getByLabel('Title · English').fill('Edited session');await page.getByRole('button',{name:'Save session'}).click();await expect(page.locator('.admin-item h3')).toHaveText('Edited session');page.on('dialog',d=>d.accept());await page.getByRole('button',{name:'Delete',exact:true}).click();await expect(page.locator('.admin-item')).toHaveCount(0);
@@ -44,4 +44,49 @@ test('five-day programme supports unscheduled academy edits and calendar placeho
  await page.getByLabel('Title · English').fill('Updated academy registration');
  await page.locator('#session-form').getByRole('button',{name:'Save session'}).click();
  await expect(page.getByRole('status')).toContainText('Session saved');
+});
+
+async function fillRegistration(page){
+ await page.getByLabel('Billing address').fill('Test 1');
+ await page.getByLabel('City',{exact:true}).fill('Rijeka');
+ await page.getByLabel('Countries').fill('Croatia');
+ await page.getByLabel('First author phone').fill('+385 51 123456');
+ await page.getByLabel('Paying as').selectOption('person');
+ await page.getByLabel('Keywords').fill('Leadership, Education');
+ await page.locator('[name=termsAccepted]').check();
+}
+test('PAR fee request validates abstract and keywords, saves abstract-only registration',async({page})=>{
+ await open(page,'presenter','#papers');await page.getByRole('article').filter({hasText:'PAR professor'}).getByRole('button',{name:'Select'}).click();
+ await expect(page.getByLabel('Registration type')).toHaveValue('par');
+ await fillRegistration(page);await page.getByLabel('Paper title').fill('Leadership');
+ await page.getByLabel('Abstract').fill('word '.repeat(401));
+ await page.getByRole('button',{name:'Submit paper',exact:true}).click();
+ await expect(page.getByRole('alert')).toContainText('400 words');
+ await page.getByLabel('Abstract').fill('A valid research abstract.');
+ await page.getByLabel('Keywords').fill('a,b,c,d,e,f');
+ await page.getByRole('button',{name:'Submit paper',exact:true}).click();
+ await expect(page.getByRole('alert')).toContainText('1–5 keywords');
+ await page.getByLabel('Keywords').fill('Leadership, Education');
+ await page.getByRole('button',{name:'Submit paper',exact:true}).click();
+ await expect(page.getByRole('button',{name:'Resubmit paper'})).toBeVisible();
+ await expect(page.locator('#paper-registration')).toContainText('Awaiting organiser verification');
+ await expect(page.getByLabel('Billing address')).toHaveValue('Test 1');
+ await page.setViewportSize({width:390,height:844});
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ await page.screenshot({path:'tests/generated/papers-mobile.png',fullPage:true});
+});
+test('admin sees billing data and can approve the PAR waiver separately',async({page})=>{
+ await open(page,'admin','#papers');await fillRegistration(page);
+ await page.getByLabel('Registration type').selectOption('par');
+ await page.getByLabel('Paper title').fill('Admin research');
+ await page.getByLabel('Abstract').fill('Research abstract.');
+ await page.getByRole('button',{name:'Submit paper',exact:true}).click();
+ await expect(page.getByRole('button',{name:'Resubmit paper'})).toBeVisible();
+ await page.locator('nav a[href="#admin"]').click();
+ await page.locator('[data-admin-tab=papers]').click();
+ await page.getByText('Registration & billing details',{exact:true}).click();
+ await expect(page.locator('.registration-details')).toContainText('Test 1');
+ await page.locator('[data-fee-review]').selectOption('approved');
+ await expect(page.locator('[data-fee-review]')).toHaveValue('approved');
+ await expect(page.locator('[data-review]')).toHaveValue('submitted');
 });

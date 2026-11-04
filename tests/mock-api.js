@@ -20,6 +20,6 @@ export const api={
  async sessions(){return [...sessions];},async addSession(data){sessions.push({...data,id:'session-'+sessions.length});},async editSession(id,data){if(sessions.some(s=>s.id===id))sessions=sessions.map(s=>s.id===id?{...s,...data}:s);else sessions.push({id,...data});},async removeSession(id){sessions=sessions.filter(s=>s.id!==id);},
  async presenters(){return [...presenters];},async addPresenter(data){presenters.push({...data,id:'presenter-'+presenters.length});},async editPresenter(id,data){presenters=presenters.map(p=>p.id===id?{...p,...data}:p);},async removePresenter(id){presenters=presenters.filter(p=>p.id!==id);},
  async users(){return [...users];},async updateUser(uid,data){users=users.map(u=>u.id===uid?{...u,...data}:u);},
- async submissions(){return [...submissions];},async submission(){return submission;},async submit(data){submission={...data,status:'submitted'};},async review(){},
+ async submissions(){return [...submissions];},async submission(){return submission;},async submit(data){submission={...data,id:base.id,status:'submitted'};submissions=[submission];},async review(){},async reviewFee(id,feeStatus){submissions=submissions.map(s=>s.id===id?{...s,feeStatus}:s);submission=submissions.find(s=>s.id===base.id);},
  async certificateSettings(){return settings;},async saveCertificate(data){settings=data;}
 };
