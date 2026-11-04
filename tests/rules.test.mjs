@@ -34,3 +34,9 @@ test('saved programme and read markers belong to their owner',async()=>{
  await assertSucceeds(setDoc(doc(db,'users','guest','notificationReads','private'),{readAt:serverTimestamp()}));
  await assertFails(setDoc(doc(db,'users','guest','notificationReads','targeted'),{readAt:serverTimestamp()}));
 });
+test('five-day programme allows unknown times but rejects partial times',async()=>{
+ const row={day:'16',time:'',end:'',titleEn:'Academy',titleHr:'Akademija',room:'',type:'ALA'};
+ await assertSucceeds(setDoc(doc(ctx('admin').firestore(),'sessions','academy'),row));
+ await assertFails(setDoc(doc(ctx('admin').firestore(),'sessions','partial'),{...row,time:'09:00'}));
+ await assertFails(setDoc(doc(ctx('guest').firestore(),'sessions','forged-academy'),row));
+});

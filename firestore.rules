@@ -33,9 +33,9 @@ service cloud.firestore {
     }
     function validSession(d) {
       return d.keys().hasOnly(['day','time','end','titleEn','titleHr','room','type'])
-        && d.day in ['18','19','20'] && d.time.matches('^([01][0-9]|2[0-3]):[0-5][0-9]$')
-        && d.end.matches('^([01][0-9]|2[0-3]):[0-5][0-9]$') && d.end > d.time
-        && str(d.titleEn,1,250) && str(d.titleHr,1,250) && str(d.room,1,120) && str(d.type,1,80);
+        && d.day in ['16','17','18','19','20'] && ((d.time == '' && d.end == '') || (d.time.matches('^([01][0-9]|2[0-3]):[0-5][0-9]$')
+        && d.end.matches('^([01][0-9]|2[0-3]):[0-5][0-9]$') && d.end > d.time))
+        && str(d.titleEn,1,250) && str(d.titleHr,1,250) && str(d.room,0,120) && str(d.type,1,80);
     }
     match /sessions/{id} {
       allow read: if active();

@@ -33,3 +33,15 @@ test('responsive pages fit desktop and mobile in both languages and themes',asyn
 });
 test('production login page loads with actual Firebase SDK',async({page})=>{const errors=[];page.on('pageerror',err=>errors.push(err.message));await page.goto('/');await expect(page.getByRole('heading',{name:'Log in to PILC 2027'})).toBeVisible();await page.screenshot({path:'tests/generated/login-desktop.png',fullPage:true,animations:'disabled'});await page.setViewportSize({width:390,height:844});await page.screenshot({path:'tests/generated/login-mobile.png',fullPage:true,animations:'disabled'});expect(errors).toEqual([]);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);});
 test('admin can preview and save a GitHub Pages PDF template without Storage',async({page})=>{await open(page,'admin','#admin');await page.locator('[data-admin-tab=certificates]').click();await expect(page.locator('input[type=file]')).toHaveCount(0);await expect(page.getByLabel('Template path on this site')).toHaveValue('assets/documents/certificate-demo.pdf');const pending=page.waitForEvent('download');await page.getByRole('button',{name:'Preview with my name'}).click();const preview=await pending;await preview.saveAs('tests/generated/static-template-preview.pdf');await page.getByLabel('Publish certificates after the conference').check();await page.getByRole('button',{name:'Save settings'}).click();await expect(page.getByRole('status')).toContainText('settings saved');await page.getByLabel('Template path on this site').fill('assets/documents/missing.pdf');await page.getByRole('button',{name:'Save settings'}).click();await expect(page.getByRole('alert')).toContainText('PDF not found');});
+test('five-day programme supports unscheduled academy edits and calendar placeholders',async({page})=>{
+ await open(page,'admin','#programme');
+ await expect(page.locator('[data-day]')).toHaveCount(5);
+ await expect(page.locator('[data-day="16"]')).toHaveAttribute('aria-pressed','true');
+ await expect(page.locator('.session').first()).toContainText('Arrival and registration');
+ const link=page.locator('.session').first().getByRole('link');
+ expect(new URL(await link.getAttribute('href')).searchParams.get('dates')).toBe('20270316/20270317');
+ await page.locator('.session').first().getByRole('button',{name:'Edit session'}).click();
+ await page.getByLabel('Title · English').fill('Updated academy registration');
+ await page.locator('#session-form').getByRole('button',{name:'Save session'}).click();
+ await expect(page.getByRole('status')).toContainText('Session saved');
+});

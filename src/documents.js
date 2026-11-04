@@ -19,10 +19,10 @@ export async function certificate(profile,{demo=false,template=null,settings={}}
     center(page,font,'CERTIFICATE OF PARTICIPATION',381,12,muted);
     center(page,font,'Potvrđujemo da je / This certifies that',335,13,muted);
     page.drawLine({start:{x:145,y:263},end:{x:697,y:263},thickness:1,color:gold});
-    center(page,font,'sudjelovao/la na konferenciji / participated in',224,13,muted);
+    center(page,font,'sudjelovao/la u programu / participated in the programme of',224,13,muted);
     center(page,font,'PAR International Leadership Conference',192,21);
     center(page,font,'WHERE LEADERS MEET FUTURE LEADERS',157,14);
-    center(page,font,'18.–20. 03. 2027.  ·  Rijeka / Opatija, Croatia',120,13,muted);
+    center(page,font,'16.–20. 03. 2027.  ·  Rijeka / Opatija, Croatia',120,13,muted);
     center(page,font,'PAR University of Applied Sciences · Veleučilište PAR',70,11,muted);
   }
   const name=`${profile.firstName} ${profile.lastName}`;
@@ -50,7 +50,7 @@ export async function badge(profile,role){
   center(page,font,profile.affiliation||'',213,12,muted);
   page.drawText('WHERE LEADERS MEET',{x:24,y:78,size:13,font,color:rgb(1,1,1)});
   page.drawText('FUTURE LEADERS',{x:24,y:56,size:17,font,color:gold});
-  page.drawText('18–20 MARCH 2027 · RIJEKA / OPATIJA',{x:24,y:30,size:8,font,color:rgb(1,1,1)});
+  page.drawText('16–20 MARCH 2027 · RIJEKA / OPATIJA',{x:24,y:30,size:8,font,color:rgb(1,1,1)});
   center(page,font,`ID: ${profile.id}`,10,6,rgb(.8,.86,.93));
   return pdf.save();
 }

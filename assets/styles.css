@@ -68,3 +68,8 @@ body:has(main.page){
 .badge-slogan:before{content:'';position:absolute;width:430px;height:260px;left:-95px;top:-42px;border-radius:50%;background:#0b2d5b;z-index:-1}
 .badge-slogan strong{color:#f5a623;font-size:17px}
 .badge-body .badge-id{margin:0 -26px;padding:10px 20px;background:#0b2d5b;color:#d0dceb}
+.programme-tabs{display:flex;overflow-x:auto;gap:8px}
+.programme-tabs>button{flex:1;min-width:95px}
+.two-column>*,.admin-content-grid>*,.profile-grid>*{min-width:0}
+.programme-tabs{max-width:100%;width:100%}
+@media(max-width:700px){.programme-tabs>button{min-width:0;padding:10px 4px;font-size:10px}.programme-tabs strong{font-size:11px}.programme-tabs{gap:3px}}

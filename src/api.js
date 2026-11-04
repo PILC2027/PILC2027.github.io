@@ -27,7 +27,7 @@ export const api={
   saveProfile: data=>updateDoc(doc(db,'users',auth.currentUser.uid),{...data,updatedAt:serverTimestamp()}),
   async sessions(){return (await getDocs(collection(db,'sessions'))).docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.day+a.time).localeCompare(b.day+b.time));},
   addSession: data=>addDoc(collection(db,'sessions'),data),
-  editSession: (id,data)=>updateDoc(doc(db,'sessions',id),data),
+  editSession: (id,data)=>setDoc(doc(db,'sessions',id),data),
   removeSession: id=>deleteDoc(doc(db,'sessions',id)),
   async presenters(){return (await getDocs(collection(db,'presenters'))).docs.map(d=>({id:d.id,...d.data()}));},
   addPresenter: data=>addDoc(collection(db,'presenters'),data),
