@@ -47,6 +47,7 @@ test('five-day programme supports unscheduled academy edits and calendar placeho
 });
 
 async function fillRegistration(page){
+ if(!await page.locator('#paper-form').count())await page.locator('.fee-card').first().getByRole('button',{name:'Select'}).click();
  await page.getByLabel('Billing address').fill('Test 1');
  await page.getByLabel('City',{exact:true}).fill('Rijeka');
  await page.getByLabel('Countries').fill('Croatia');
@@ -89,4 +90,17 @@ test('admin sees billing data and can approve the PAR waiver separately',async({
  await page.locator('[data-fee-review]').selectOption('approved');
  await expect(page.locator('[data-fee-review]')).toHaveValue('approved');
  await expect(page.locator('[data-review]')).toHaveValue('submitted');
+ const pending=page.waitForEvent('download');await page.getByRole('button',{name:'Download all submissions · PDF'}).click();const report=await pending;await report.saveAs('tests/generated/submissions-report.pdf');
+});
+
+test('registration only opens after plan selection and preserves entered details on back',async({page})=>{
+ await open(page,'presenter','#papers');await expect(page.locator('#paper-form')).toHaveCount(0);
+ await page.locator('.fee-card').nth(1).getByRole('button',{name:'Select'}).click();
+ await expect(page.getByLabel('Registration type')).toHaveValue('two');
+ await page.getByLabel('Paper title').fill('My draft');
+ await page.getByRole('button',{name:'Back to participation plans'}).click();
+ await expect(page.locator('#paper-form')).toHaveCount(0);
+ await page.locator('.fee-card').nth(2).getByRole('button',{name:'Select'}).click();
+ await expect(page.getByLabel('Paper title')).toHaveValue('My draft');
+ await expect(page.getByLabel('Registration type')).toHaveValue('three');
 });

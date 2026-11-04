@@ -55,3 +55,30 @@ export async function badge(profile,role){
   return pdf.save();
 }
 export function download(data,name,type='application/pdf'){const url=URL.createObjectURL(new Blob([data],{type}));const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),60000);}
+
+export async function submissionReport(rows,language='en'){
+ const {pdf,font}=await setup();const hr=language==='hr';let page,y;
+ const tr=(en,cr)=>hr?cr:en;
+ function next(){page=pdf.addPage([595,842]);y=785;page.drawRectangle({x:42,y:807,width:511,height:4,color:gold});page.drawText('PILC 2027 · '+tr('Submission report','Pregled prijava'),{x:42,y:818,size:10,font,color:navy});page.drawText(String(pdf.getPageCount()),{x:540,y:22,size:9,font,color:muted});}
+ function text(value,size=10,color=navy){
+   const raw=String(value??'—').replace(/[\u0000-\u0008\u000b-\u001f]/g,'');
+   const lines=[];for(const paragraph of raw.split('\n')){let line='';for(const word of paragraph.split(/\s+/)){let pieces=[''];for(const char of word){let i=pieces.length-1;if(font.widthOfTextAtSize(pieces[i]+char,size)>505)pieces.push(char);else pieces[i]+=char;}for(const piece of pieces){if(line&&font.widthOfTextAtSize(line+' '+piece,size)>511){lines.push(line);line=piece;}else line+=(line?' ':'')+piece;}}lines.push(line);}
+   for(const line of lines){if(y<52)next();page.drawText(line,{x:42,y,size,font,color});y-=size*1.55;}y-=6;
+ }
+ next();text(tr('All submitted papers and author details','Svi prijavljeni radovi i podaci o autorima'),18);
+ text(tr('Private organiser copy. Full papers remain available at the links supplied by their authors.','Privatni primjerak organizatora. Cjeloviti radovi dostupni su putem poveznica koje su dostavili autori.'),10,muted);
+ text(tr('Number of submissions: ','Broj prijava: ')+rows.length);
+ for(let i=0;i<rows.length;i++){
+   if(i||y<600)next();const s=rows[i],r=s.registration||{};
+   text((i+1)+'. '+s.title,17);text(tr('Authors: ','Autori: ')+s.authors,12);
+   const fields=[['institution','Institution / Company','Ustanova / tvrtka'],['address','Billing address','Adresa za račun'],['city','City','Grad'],['country','Countries','Države'],['vat','VAT / Tax ID','OIB / porezni broj'],['contactEmail','First author email','E-mail prvog autora'],['phone','First author phone','Telefon prvog autora'],['registrationType','Registration type','Vrsta registracije'],['payingAs','Paying as','Plaćanje kao'],['keywords','Keywords','Ključne riječi']];
+   const labels={one:tr('1 author','1 autor'),two:tr('2 authors','2 autora'),three:tr('3+ authors','3+ autora'),par:tr('PAR professor','Profesor PAR-a'),company:tr('Company / institution','Tvrtka / ustanova'),person:tr('Person','Fizička osoba')};
+   for(const [key,en,cr] of fields)text(tr(en,cr)+': '+(['registrationType','payingAs'].includes(key)?labels[r[key]]||'—':r[key]||'—'));
+   text(tr('Paper status: ','Status rada: ')+(s.status||'—'));
+   text(tr('Fee waiver status: ','Status oslobođenja od kotizacije: ')+(r.registrationType==='par'?(s.feeStatus||'pending'):tr('Not requested','Nije zatraženo')));
+   text(tr('Terms accepted: ','Uvjeti prihvaćeni: ')+(r.termsAccepted?tr('Yes','Da'):'—'));
+   text(tr('Abstract','Sažetak'),13);text(s.abstract);
+   text(tr('Full paper link','Poveznica na cjeloviti rad'),12);text(s.paperUrl||tr('Not supplied','Nije dostavljena'),9,muted);
+ }
+ return pdf.save();
+}
