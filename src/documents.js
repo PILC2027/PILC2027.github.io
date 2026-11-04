@@ -1,8 +1,8 @@
 import { PDFDocument, rgb } from 'pdf-lib';
 import fontkit from '@pdf-lib/fontkit';
-const navy=rgb(.067,.176,.314), gold=rgb(1,.647,.067), muted=rgb(.34,.42,.51);
+const navy=rgb(.043,.176,.357), gold=rgb(.961,.651,.137), muted=rgb(.34,.42,.51);
 const bytes=async path=>{const r=await fetch(path);if(!r.ok)throw Error('asset');return r.arrayBuffer();};
-async function setup(template){const pdf=template?await PDFDocument.load(template):await PDFDocument.create();pdf.registerFontkit(fontkit);const font=await pdf.embedFont(await bytes('assets/Lato-Regular.ttf'),{subset:true});return {pdf,font};}
+async function setup(template){const pdf=template?await PDFDocument.load(template):await PDFDocument.create();pdf.registerFontkit(fontkit);const font=await pdf.embedFont(await bytes('assets/Montserrat-Regular.ttf'),{subset:true});return {pdf,font};}
 function center(page,font,text,y,size=18,color=navy){const fit=Math.min(size,(page.getWidth()-100)/Math.max(font.widthOfTextAtSize(text,1),1));page.drawText(text,{x:(page.getWidth()-font.widthOfTextAtSize(text,fit))/2,y,size:fit,font,color});}
 export async function certificate(profile,{demo=false,template=null,settings={}}={}){
   const {pdf,font}=await setup(template);
@@ -11,6 +11,8 @@ export async function certificate(profile,{demo=false,template=null,settings={}}
     page.drawRectangle({x:0,y:0,width:842,height:595,color:rgb(1,1,1)});
     page.drawRectangle({x:0,y:0,width:22,height:595,color:navy});
     page.drawRectangle({x:22,y:0,width:7,height:595,color:gold});
+    page.drawEllipse({x:842,y:0,xScale:125,yScale:150,borderWidth:24,borderColor:gold});
+    page.drawEllipse({x:0,y:595,xScale:150,yScale:120,borderWidth:30,borderColor:rgb(.231,.561,.839)});
     const logo=await pdf.embedPng(await bytes('assets/pilc-logo.png'));
     page.drawImage(logo,{x:251,y:441,width:340,height:118});
     center(page,font,'POTVRDA O SUDJELOVANJU',411,28);
@@ -36,14 +38,17 @@ export async function badge(profile,role){
   const {pdf,font}=await setup();const page=pdf.addPage([360,510]);
   const logo=await pdf.embedPng(await bytes('assets/pilc-logo.png'));
   page.drawImage(logo,{x:20,y:382,width:320,height:111});
-  page.drawRectangle({x:0,y:0,width:360,height:377,color:navy});
-  page.drawRectangle({x:0,y:370,width:360,height:7,color:gold});
-  center(page,font,'PILC 2027 · AKREDITACIJA / BADGE',335,10,rgb(1,1,1));
-  center(page,font,profile.title||'',280,14,rgb(.8,.86,.93));
-  center(page,font,profile.firstName,242,30,rgb(1,1,1));
-  center(page,font,profile.lastName,201,30,rgb(1,1,1));
-  center(page,font,profile.affiliation,162,13,rgb(.8,.86,.93));
+  page.drawRectangle({x:0,y:0,width:360,height:155,color:navy});
+  page.drawEllipse({x:40,y:35,xScale:280,yScale:110,borderWidth:35,borderColor:rgb(.231,.561,.839)});
+  page.drawEllipse({x:330,y:-20,xScale:140,yScale:155,borderWidth:26,borderColor:gold});
+  
+  center(page,font,'PILC 2027 · AKREDITACIJA / BADGE',335,10,navy);
+  center(page,font,profile.title||'',280,14,muted);
+  center(page,font,profile.firstName,242,30,navy);
+  center(page,font,profile.lastName,201,30,navy);
+  center(page,font,profile.affiliation,173,13,muted);
   center(page,font,role.toUpperCase(),114,13,gold);
+  center(page,font,'WHERE LEADERS MEET FUTURE LEADERS',86,10,rgb(1,1,1));
   center(page,font,'18–20 MARCH 2027 · RIJEKA / OPATIJA',62,10,rgb(1,1,1));
   center(page,font,`ID: ${profile.id}`,34,8,rgb(.8,.86,.93));
   return pdf.save();
