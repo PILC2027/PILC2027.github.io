@@ -121,3 +121,7 @@ Service worker sprema samo offline zaslon i ikone; osobni podaci i Firebase odgo
 Stranica prikazuje referentne cijene iz dostavljenog poziva: 240/370/480 EUR za ranu prijavu te 300/430/540 EUR redovno (PDV uključen). Potvrda cijena i rokova za 2027. još se očekuje; rokovi iz 2026. nisu preneseni. Profesori PAR-a mogu zatražiti oslobođenje; admin odluku potvrđuje u kartici Radovi, zasebno od statusa rada.
 
 Obrazac pohranjuje podatke autora, ustanove, računa, kontakta, vrstu registracije, način plaćanja, 1–5 ključnih riječi i sažetak do 400 riječi. PDF poveznica je neobavezna pri predaji sažetka. Podaci su privatni za autora i administratore. Ponovno slanje vraća provjeru kotizacije na čekanje. Portal ne naplaćuje i ne šalje automatsku e-poštu. Nakon nadogradnje obavezno objaviti firestore.rules.
+
+## Javni web i osobni portal
+
+Početna, Predaja radova (paketi i upute), O konferenciji, Program i Kontakt dostupni su bez računa. Prijava je na #login. Javno se čitaju samo kolekcije sessions i presenters; u njih unosite samo sadržaj namijenjen objavi. Sve izmjene ostaju administratorske. Profili, predani radovi i fakturačni podaci, osobni program i ciljane obavijesti ostaju privatni. Predaja rada zahtijeva odobrenog izlagača; javna predaja bez računa nije uključena. Objavite firestore.rules nakon ovog ažuriranja.
