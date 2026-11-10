@@ -1,11 +1,13 @@
 const scenario=new URLSearchParams(location.search).get('test')||'signedout';
 const base={id:'test-person',firstName:'Željka',lastName:'Šimić',title:'dr. sc.',affiliation:'Veleučilište PAR',email:'test@example.com',role:scenario==='admin'?'admin':scenario==='presenter'?'presenter':'guest',requestedRole:'guest',status:scenario==='pending'?'pending':'approved',attended:false};
 let profile=base,user=scenario==='signedout'?null:{uid:base.id,email:base.email,emailVerified:false},authCallback,profileCallback;
+let guestRegistration=null;
 let sessions=[],presenters=[],submissions=[],submission=null,settings=null;
 let users=[base,{...base,id:'pending-person',firstName:'Ana',lastName:'Horvat',role:'guest',requestedRole:'presenter',status:'pending',email:'ana@example.com'}];
 let saved=JSON.parse(localStorage.getItem('mock-saved')||'[]'),reads=[],notices=[],noticeCallback;
 const notify=()=>noticeCallback?.(notices.filter(n=>['all','role:'+profile.role,'user:'+profile.id].includes(n.audience)));
 export const api={
+ async guestRegistration(){return guestRegistration;},async guestRegistrations(){return guestRegistration?[{id:base.id,...guestRegistration}]:[];},async registerGuest(data){guestRegistration={...data,status:'submitted'};},async reviewGuest(id,status){guestRegistration.status=status;},
  async savedSessions(){return [...saved];},async saveSession(id,value){saved=value?[...saved,id]:saved.filter(s=>s!==id);localStorage.setItem('mock-saved',JSON.stringify(saved));},
  async readNotifications(){return [...reads];},async markRead(id){reads.push(id);},
  observeNotifications(role,cb){noticeCallback=cb;setTimeout(notify,0);return ()=>{noticeCallback=null;};},

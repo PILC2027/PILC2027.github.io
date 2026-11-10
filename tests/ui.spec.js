@@ -47,6 +47,7 @@ test('five-day programme supports unscheduled academy edits and calendar placeho
 });
 
 async function fillRegistration(page){
+ if(await page.getByRole('button',{name:'Paper/Author Registration',exact:true}).count())await page.getByRole('button',{name:'Paper/Author Registration',exact:true}).click();
  if(!await page.locator('#paper-form').count())await page.locator('.fee-card').first().getByRole('button',{name:'Select'}).click();
  await page.getByLabel('Billing address').fill('Test 1');
  await page.getByLabel('City',{exact:true}).fill('Rijeka');
@@ -57,7 +58,7 @@ async function fillRegistration(page){
  await page.locator('[name=termsAccepted]').check();
 }
 test('PAR fee request validates abstract and keywords, saves abstract-only registration',async({page})=>{
- await open(page,'presenter','#papers');await page.getByRole('article').filter({hasText:'PAR professor'}).getByRole('button',{name:'Select'}).click();
+ await open(page,'presenter','#papers');await page.getByRole('button',{name:'Paper/Author Registration',exact:true}).click();await page.getByRole('article').filter({hasText:'PAR professor'}).getByRole('button',{name:'Select'}).click();
  await expect(page.getByLabel('Registration type')).toHaveValue('par');
  await fillRegistration(page);await page.getByLabel('Paper title').fill('Leadership');
  await page.getByLabel('Abstract').fill('word '.repeat(401));
@@ -94,7 +95,7 @@ test('admin sees billing data and can approve the PAR waiver separately',async({
 });
 
 test('registration only opens after plan selection and preserves entered details on back',async({page})=>{
- await open(page,'presenter','#papers');await expect(page.locator('#paper-form')).toHaveCount(0);
+ await open(page,'presenter','#papers');await page.getByRole('button',{name:'Paper/Author Registration',exact:true}).click();await expect(page.locator('#paper-form')).toHaveCount(0);
  await page.locator('.fee-card').nth(1).getByRole('button',{name:'Select'}).click();
  await expect(page.getByLabel('Registration type')).toHaveValue('two');
  await page.getByLabel('Paper title').fill('My draft');
@@ -107,10 +108,17 @@ test('registration only opens after plan selection and preserves entered details
 test('public visitors can browse the site but personal pages require login',async({page})=>{
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await open(page,'signedout','#home');await expect(page.locator('.home-hero')).toBeVisible();
- await expect(page.locator('nav a')).toHaveText(['Home','Paper submission','About','Programme','Contact']);
+ await expect(page.locator('nav a')).toHaveText(['Home','Participant Registration','About','Programme','Contact']);
  await expect(page.locator('.avatar')).toHaveCount(0);
  for(const route of ['about','programme','papers','contact']){await page.locator('nav a[href="#'+route+'"]').click();await expect(page.locator('#auth-form')).toHaveCount(0);}
- await page.locator('nav a[href="#papers"]').click();await page.locator('.fee-card button').first().click();await expect(page.locator('#paper-form')).toHaveCount(0);
+ await page.locator('nav a[href="#papers"]').click();await page.getByRole('button',{name:'Paper/Author Registration',exact:true}).click();await page.locator('.fee-card button').first().click();await expect(page.locator('#paper-form')).toHaveCount(0);
  await page.goto('/?test=signedout#profile');await expect(page.locator('#auth-form')).toBeVisible();
  expect(errors).toEqual([]);
+});
+test('participant registration separates guests and authors',async({page})=>{
+ await open(page,'presenter','#papers');await expect(page.getByRole('heading',{name:'Participant Registration',exact:true})).toBeVisible();
+ await page.getByRole('button',{name:'Select standard'}).click();await expect(page.locator('#guest-registration-form')).toContainText('100 EUR');
+ await page.getByRole('button',{name:'Select PAR',exact:true}).click();await expect(page.getByLabel('PAR code',{exact:true})).toBeVisible();await page.getByLabel('PAR code',{exact:true}).fill('TEST');await page.locator('#guest-registration-form [name=terms]').check();await page.getByRole('button',{name:'Submit guest registration'}).click();await expect(page.getByRole('status')).toContainText('Registration received');
+ await page.getByRole('button',{name:'Paper/Author Registration',exact:true}).click();await expect(page.locator('.fee-card')).toHaveCount(4);
+ await expect(page.getByRole('link',{name:'Open proceedings · PDF'})).toHaveAttribute('href','https://repozitorij.par.hr/object/par:11/FILE0');
 });

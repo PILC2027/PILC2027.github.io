@@ -4,6 +4,11 @@ import { getFirestore, doc, setDoc, getDoc, updateDoc, onSnapshot, collection, g
 import { firebaseConfig } from './config.js';
 const app=initializeApp(firebaseConfig), auth=getAuth(app), db=getFirestore(app);
 export const api={
+ async guestRegistration(){const snapshot=await getDoc(doc(db,'guestRegistrations',auth.currentUser.uid));return snapshot.exists()?snapshot.data():null;},
+ async registerGuest(data){const uid=auth.currentUser.uid;await setDoc(doc(db,'guestRegistrations',uid),{...data,ownerId:uid,status:'submitted',updatedAt:serverTimestamp()});},
+ async guestRegistrations(){return (await getDocs(collection(db,'guestRegistrations'))).docs.map(d=>({id:d.id,...d.data()}));},
+ reviewGuest:(id,status)=>updateDoc(doc(db,'guestRegistrations',id),{status,updatedAt:serverTimestamp()}),
+
   async savedSessions(){return (await getDocs(collection(db,'users',auth.currentUser.uid,'savedSessions'))).docs.map(d=>d.id);},
   saveSession: (id,saved)=>saved?setDoc(doc(db,'users',auth.currentUser.uid,'savedSessions',id),{savedAt:serverTimestamp()}):deleteDoc(doc(db,'users',auth.currentUser.uid,'savedSessions',id)),
   async readNotifications(){return (await getDocs(collection(db,'users',auth.currentUser.uid,'notificationReads'))).docs.map(d=>d.id);},

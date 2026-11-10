@@ -55,3 +55,11 @@ test('registration data and PAR fee waiver are validated and admin-controlled',a
 });
 
 test('public visitors only read public programme and presenters',async()=>{const db=env.unauthenticatedContext().firestore();await assertSucceeds(getDocs(collection(db,'presenters')));for(const name of ['users','submissions','notifications'])await assertFails(getDocs(collection(db,name)));await assertFails(setDoc(doc(db,'sessions','attack'),{titleEn:'Forged'}));});
+test('guest registration stores requests privately and cannot self-approve',async()=>{
+ const row={name:'Ana',institution:'PAR',email:'a@example.com',plan:'par',code:'TEST',terms:true,ownerId:'guest',status:'submitted',updatedAt:serverTimestamp()};
+ const ref=doc(ctx('guest').firestore(),'guestRegistrations','guest');await assertSucceeds(setDoc(ref,row));
+ await assertFails(updateDoc(ref,{status:'accepted',updatedAt:serverTimestamp()}));
+ await assertFails(getDocs(collection(env.unauthenticatedContext().firestore(),'guestRegistrations')));
+ await assertFails(getDoc(doc(ctx('presenter').firestore(),'guestRegistrations','guest')));
+ await assertSucceeds(updateDoc(doc(ctx('admin').firestore(),'guestRegistrations','guest'),{status:'accepted',updatedAt:serverTimestamp()}));
+});

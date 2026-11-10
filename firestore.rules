@@ -83,6 +83,17 @@ service cloud.firestore {
       );
       allow delete: if false;
     }
+    match /guestRegistrations/{uid} {
+      allow read: if admin() || (active() && owner(uid));
+      allow create, update: if request.resource.data.keys().hasOnly(['name','institution','email','plan','code','terms','ownerId','status','updatedAt'])
+        && str(request.resource.data.name,1,160) && str(request.resource.data.institution,1,250)
+        && str(request.resource.data.email,3,254) && request.resource.data.plan in ['standard','par']
+        && str(request.resource.data.code,0,100) && (request.resource.data.plan != 'par' || request.resource.data.code.size()>0)
+        && request.resource.data.terms == true && request.resource.data.ownerId == uid && request.resource.data.updatedAt == request.time
+        && ((active() && owner(uid) && request.resource.data.status == 'submitted')
+          || (admin() && request.resource.data.status in ['submitted','accepted','rejected'] && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','updatedAt'])));
+      allow delete: if false;
+    }
     match /settings/certificates {
       allow read: if active();
       allow create, update: if admin() && request.resource.data.keys().hasOnly(['x','y','fontSize','published','hasTemplate','templatePath'])

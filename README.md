@@ -125,3 +125,10 @@ Obrazac pohranjuje podatke autora, ustanove, računa, kontakta, vrstu registraci
 ## Javni web i osobni portal
 
 Početna, Predaja radova (paketi i upute), O konferenciji, Program i Kontakt dostupni su bez računa. Prijava je na #login. Javno se čitaju samo kolekcije sessions i presenters; u njih unosite samo sadržaj namijenjen objavi. Sve izmjene ostaju administratorske. Profili, predani radovi i fakturačni podaci, osobni program i ciljane obavijesti ostaju privatni. Predaja rada zahtijeva odobrenog izlagača; javna predaja bez računa nije uključena. Objavite firestore.rules nakon ovog ažuriranja.
+
+
+### Participant Registration
+
+Navigacija sadrži Guest Registration (standardna kotizacija 100 EUR ili PAR zahtjev za oslobođenje uz kod) i Paper/Author Registration s postojećim paketima. Registracije gostiju spremaju se u privatnu kolekciju `guestRegistrations`; admin ih pregledava u Registracije i radovi. PAR kod zasad se provjerava ručno: službeni kod i kriteriji nisu dostavljeni. Unos koda sam po sebi ne odobrava oslobođenje. Status accepted za PAR zahtjev znači da je organizator odobrio zahtjev; standardna registracija ne obrađuje niti potvrđuje plaćanje. Za slanje je i dalje potreban odobren račun. Nakon objave aplikacije objavite ažurirani `firestore.rules`.
+
+Digitalni Zbornik PILC dostupan je poveznicom na repozitorij PAR-a na početnoj stranici i stranici registracije.
