@@ -1,7 +1,7 @@
 import {readFileSync} from 'node:fs';
 import {before,after,test} from 'node:test';
 import {initializeTestEnvironment,assertSucceeds,assertFails} from '@firebase/rules-unit-testing';
-import {doc,setDoc,getDoc,getDocs,collection,updateDoc,serverTimestamp,Timestamp} from 'firebase/firestore';
+import {doc,setDoc,getDoc,getDocs,collection,updateDoc,serverTimestamp,Timestamp,writeBatch,runTransaction} from 'firebase/firestore';
 let env;
 const data=(extra={})=>({firstName:'Ana',lastName:'Horvat',title:'',affiliation:'PAR',email:'person@example.com',requestedRole:'guest',role:'guest',status:'pending',attended:false,createdAt:serverTimestamp(),updatedAt:serverTimestamp(),...extra});
 const ctx=(uid,verified=false)=>env.authenticatedContext(uid,{email:'person@example.com',email_verified:verified});
@@ -62,4 +62,59 @@ test('guest registration stores requests privately and cannot self-approve',asyn
  await assertFails(getDocs(collection(env.unauthenticatedContext().firestore(),'guestRegistrations')));
  await assertFails(getDoc(doc(ctx('presenter').firestore(),'guestRegistrations','guest')));
  await assertSucceeds(updateDoc(doc(ctx('admin').firestore(),'guestRegistrations','guest'),{status:'accepted',updatedAt:serverTimestamp()}));
+});
+
+const promoRow=(percent=20)=>({percent,year:2027,createdBy:'admin',createdAt:serverTimestamp(),usedBy:'',usedAt:null});
+const guestRow=(uid,code)=>({name:'Ana Horvat',institution:'PAR',email:'person@example.com',plan:'standard',code,promoCode:code,terms:true,ownerId:uid,status:'submitted',updatedAt:serverTimestamp()});
+async function promoUser(id){await env.withSecurityRulesDisabled(c=>setDoc(doc(c.firestore(),'users',id),data({status:'approved'})));}
+function claimBatch(db,uid,code,percent=20,{registration=true,claim=true}={}){const b=writeBatch(db);b.update(doc(db,'promoCodes',code),{usedBy:uid,usedAt:serverTimestamp()});if(claim)b.set(doc(db,'discountClaims',uid),{code,percent,year:2027,target:'guestRegistrations',ownerId:uid,name:'Ana Horvat',email:'person@example.com',claimedAt:serverTimestamp()});if(registration)b.set(doc(db,'guestRegistrations',uid),guestRow(uid,code));return b.commit();}
+test('promo creation is admin only and percentages must match the code',async()=>{
+ const admin=ctx('admin').firestore();await assertSucceeds(setDoc(doc(admin,'promoCodes','P20ABC'),promoRow()));
+ await assertFails(setDoc(doc(ctx('guest').firestore(),'promoCodes','P50ABC'),{...promoRow(50),createdBy:'guest'}));
+ await assertFails(setDoc(doc(admin,'promoCodes','P50BAD'),promoRow(20)));
+ await assertFails(setDoc(doc(admin,'promoCodes','P20ABC'),promoRow()));
+ await assertFails(getDocs(collection(ctx('guest').firestore(),'promoCodes')));
+ await assertFails(getDoc(doc(env.unauthenticatedContext().firestore(),'promoCodes','P20ABC')));
+});
+test('redemption requires atomic registration, code and immutable matching account claim',async()=>{
+ await promoUser('promo-one');const db=ctx('promo-one').firestore();
+ await assertFails(claimBatch(db,'promo-one','P20ABC',100));
+ await assertFails(claimBatch(db,'promo-one','P20ABC',20,{registration:false}));
+ await assertFails(claimBatch(db,'promo-one','P20ABC',20,{claim:false}));
+ await assertSucceeds(claimBatch(db,'promo-one','P20ABC'));
+ await assertFails(updateDoc(doc(db,'discountClaims','promo-one'),{percent:100}));
+ await assertFails(updateDoc(doc(ctx('admin').firestore(),'discountClaims','promo-one'),{percent:100}));
+ await assertFails(updateDoc(doc(db,'guestRegistrations','promo-one'),{promoCode:'',updatedAt:serverTimestamp()}));
+ await assertSucceeds(updateDoc(doc(db,'guestRegistrations','promo-one'),{name:'Updated participant',updatedAt:serverTimestamp()}));
+ await assertFails(getDoc(doc(ctx('guest').firestore(),'discountClaims','promo-one')));
+ await assertFails(getDoc(doc(ctx('guest').firestore(),'promoCodes','P20ABC')));
+ await promoUser('promo-two');await assertFails(claimBatch(ctx('promo-two').firestore(),'promo-two','P20ABC'));
+ await assertSucceeds(setDoc(doc(ctx('admin').firestore(),'promoCodes','P50XYZ'),promoRow(50)));
+ await assertFails(claimBatch(db,'promo-one','P50XYZ',50));
+});
+test('two simultaneous claims cannot consume the same code twice',async()=>{
+ await promoUser('race-a');await promoUser('race-b');await setDoc(doc(ctx('admin').firestore(),'promoCodes','P20RAC'),promoRow());
+ const results=await Promise.allSettled([claimBatch(ctx('race-a').firestore(),'race-a','P20RAC'),claimBatch(ctx('race-b').firestore(),'race-b','P20RAC')]);
+ if(results.filter(r=>r.status==='fulfilled').length!==1)throw Error('Expected exactly one successful redemption');
+ const loser=results[0].status==='rejected'?'race-a':'race-b';await assertSucceeds(getDoc(doc(ctx(loser).firestore(),'discountClaims',loser))).then(s=>{if(s.exists())throw Error('Loser must not have a claim');});
+});
+
+test('author registration claims a code through a transaction and keeps it on resubmission',async()=>{
+ await env.withSecurityRulesDisabled(c=>setDoc(doc(c.firestore(),'users','promo-author'),data({status:'approved',role:'presenter'})));
+ await setDoc(doc(ctx('admin').firestore(),'promoCodes','P50AUT'),promoRow(50));
+ const db=ctx('promo-author').firestore();
+ await assertSucceeds(runTransaction(db,async tx=>{
+   const code=await tx.get(doc(db,'promoCodes','P50AUT'));const p=await tx.get(doc(db,'users','promo-author'));await tx.get(doc(db,'discountClaims','promo-author'));
+   tx.update(code.ref,{usedBy:'promo-author',usedAt:serverTimestamp()});
+   tx.set(doc(db,'discountClaims','promo-author'),{code:code.id,percent:code.data().percent,year:2027,target:'submissions',ownerId:'promo-author',name:p.data().firstName+' '+p.data().lastName,email:p.data().email,claimedAt:serverTimestamp()});
+   tx.set(doc(db,'submissions','promo-author'),{title:'Research',authors:'Ana',abstract:'Abstract',paperUrl:'',ownerId:'promo-author',status:'submitted',updatedAt:serverTimestamp(),promoCode:code.id});
+ }));
+ await assertSucceeds(updateDoc(doc(db,'submissions','promo-author'),{title:'Updated paper',updatedAt:serverTimestamp()}));
+ await assertFails(setDoc(doc(db,'guestRegistrations','promo-author'),guestRow('promo-author','P50AUT')));
+});
+test('PAR guest registration only accepts a 100 percent code',async()=>{
+ await promoUser('par-guest');const db=ctx('par-guest').firestore();
+ await setDoc(doc(ctx('admin').firestore(),'promoCodes','P20PAR'),promoRow());await setDoc(doc(ctx('admin').firestore(),'promoCodes','P100PAR'),promoRow(100));
+ async function submit(code,percent){const b=writeBatch(db);b.update(doc(db,'promoCodes',code),{usedBy:'par-guest',usedAt:serverTimestamp()});b.set(doc(db,'discountClaims','par-guest'),{code,percent,year:2027,target:'guestRegistrations',ownerId:'par-guest',name:'Ana Horvat',email:'person@example.com',claimedAt:serverTimestamp()});b.set(doc(db,'guestRegistrations','par-guest'),{...guestRow('par-guest',code),plan:'par'});return b.commit();}
+ await assertFails(submit('P20PAR',20));await assertSucceeds(submit('P100PAR',100));
 });

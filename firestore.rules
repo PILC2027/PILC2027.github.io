@@ -53,6 +53,44 @@ service cloud.firestore {
       allow create, update: if admin() && validPresenter(request.resource.data);
       allow delete: if admin();
     }
+    function validPromo(d, uid, target) {
+      let claim = /databases/$(database)/documents/discountClaims/$(uid);
+      let code = d.get('promoCode','');
+      return (code == '' && (!existsAfter(claim) || getAfter(claim).data.target != target))
+        || (code is string && existsAfter(claim) && getAfter(claim).data.code == code && getAfter(claim).data.target == target);
+    }
+    match /promoCodes/{code} {
+      allow get: if admin() || (active() && (!exists(/databases/$(database)/documents/promoCodes/$(code)) || resource.data.usedBy == '' || resource.data.usedBy == request.auth.uid));
+      allow list: if admin();
+      allow create: if admin()
+        && request.resource.data.keys().hasOnly(['percent','year','createdBy','createdAt','usedBy','usedAt'])
+        && ((request.resource.data.percent == 20 && code.matches('^P20[A-Z]{3}$')) || (request.resource.data.percent == 50 && code.matches('^P50[A-Z]{3}$')) || (request.resource.data.percent == 100 && code.matches('^P100[A-Z]{3}$')))
+        && request.resource.data.year == 2027 && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.createdAt == request.time && request.resource.data.usedBy == '' && request.resource.data.usedAt == null;
+      allow update: if active() && resource.data.usedBy == '' && request.resource.data.usedBy == request.auth.uid
+        && request.resource.data.usedAt == request.time
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['usedBy','usedAt'])
+        && !exists(/databases/$(database)/documents/discountClaims/$(request.auth.uid))
+        && getAfter(/databases/$(database)/documents/discountClaims/$(request.auth.uid)).data.code == code;
+      allow delete: if false;
+    }
+    match /discountClaims/{uid} {
+      allow get: if admin() || (active() && owner(uid));
+      allow list: if admin();
+      allow create: if active() && owner(uid)
+        && request.resource.data.keys().hasOnly(['code','percent','year','target','ownerId','name','email','claimedAt'])
+        && request.resource.data.ownerId == uid && request.resource.data.year == 2027 && request.resource.data.claimedAt == request.time
+        && request.resource.data.target in ['submissions','guestRegistrations']
+        && request.resource.data.name == get(/databases/$(database)/documents/users/$(uid)).data.firstName + ' ' + get(/databases/$(database)/documents/users/$(uid)).data.lastName
+        && request.resource.data.email == get(/databases/$(database)/documents/users/$(uid)).data.email
+        && get(/databases/$(database)/documents/promoCodes/$(request.resource.data.code)).data.usedBy == ''
+        && request.resource.data.percent == get(/databases/$(database)/documents/promoCodes/$(request.resource.data.code)).data.percent
+        && getAfter(/databases/$(database)/documents/promoCodes/$(request.resource.data.code)).data.usedBy == uid
+        && getAfter(/databases/$(database)/documents/promoCodes/$(request.resource.data.code)).data.usedAt == request.time
+        && getAfter(/databases/$(database)/documents/$(request.resource.data.target)/$(uid)).data.promoCode == request.resource.data.code
+        && getAfter(/databases/$(database)/documents/$(request.resource.data.target)/$(uid)).data.updatedAt == request.time;
+      allow update, delete: if false;
+    }
     function validRegistration(r) {
       return r.keys().hasAll(['institution','address','city','country','vat','contactEmail','phone','registrationType','payingAs','keywords','termsAccepted'])
         && r.keys().hasOnly(['institution','address','city','country','vat','contactEmail','phone','registrationType','payingAs','keywords','termsAccepted'])
@@ -64,8 +102,8 @@ service cloud.firestore {
         && r.termsAccepted == true;
     }
     function validSubmission(d,uid) {
-      return d.keys().hasOnly(['title','authors','abstract','paperUrl','ownerId','status','updatedAt','registration','feeStatus'])
-        && d.ownerId == uid && str(d.title,1,250) && str(d.authors,1,500) && str(d.abstract,1,12000)
+      return d.keys().hasOnly(['title','authors','abstract','paperUrl','ownerId','status','updatedAt','registration','feeStatus','promoCode'])
+        && validPromo(d,uid,'submissions') && d.ownerId == uid && str(d.title,1,250) && str(d.authors,1,500) && str(d.abstract,1,12000)
         && str(d.paperUrl,0,2000) && (d.paperUrl == '' || d.paperUrl.matches('^https://[^ ].*'))
         && (!('registration' in d) || (validRegistration(d.registration) && d.abstract.split('\\s+').size() <= 400))
         && (!('feeStatus' in d) || d.feeStatus in ['pending','approved','rejected'])
@@ -85,7 +123,9 @@ service cloud.firestore {
     }
     match /guestRegistrations/{uid} {
       allow read: if admin() || (active() && owner(uid));
-      allow create, update: if request.resource.data.keys().hasOnly(['name','institution','email','plan','code','terms','ownerId','status','updatedAt'])
+      allow create, update: if request.resource.data.keys().hasOnly(['name','institution','email','plan','code','terms','ownerId','status','updatedAt','promoCode'])
+        && validPromo(request.resource.data,uid,'guestRegistrations')
+        && (!('promoCode' in request.resource.data) || request.resource.data.plan != 'par' || getAfter(/databases/$(database)/documents/discountClaims/$(uid)).data.percent == 100)
         && str(request.resource.data.name,1,160) && str(request.resource.data.institution,1,250)
         && str(request.resource.data.email,3,254) && request.resource.data.plan in ['standard','par']
         && str(request.resource.data.code,0,100) && (request.resource.data.plan != 'par' || request.resource.data.code.size()>0)

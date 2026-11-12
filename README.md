@@ -124,11 +124,19 @@ Obrazac pohranjuje podatke autora, ustanove, računa, kontakta, vrstu registraci
 
 ## Javni web i osobni portal
 
-Početna, Predaja radova (paketi i upute), O konferenciji, Program i Kontakt dostupni su bez računa. Prijava je na #login. Javno se čitaju samo kolekcije sessions i presenters; u njih unosite samo sadržaj namijenjen objavi. Sve izmjene ostaju administratorske. Profili, predani radovi i fakturačni podaci, osobni program i ciljane obavijesti ostaju privatni. Predaja rada zahtijeva odobrenog izlagača; javna predaja bez računa nije uključena. Objavite firestore.rules nakon ovog ažuriranja.
+Početna, O konferenciji, Program i Kontakt dostupni su bez računa. Participant Registration neprijavljenima otvara izradu računa, s mogućnošću prebacivanja na prijavu postojećim računom. Prijava je na #login. Javno se čitaju samo kolekcije sessions i presenters; u njih unosite samo sadržaj namijenjen objavi. Sve izmjene ostaju administratorske. Profili, predani radovi i fakturačni podaci, osobni program i ciljane obavijesti ostaju privatni. Predaja rada zahtijeva odobrenog izlagača; javna predaja bez računa nije uključena. Objavite firestore.rules nakon ovog ažuriranja.
 
 
 ### Participant Registration
 
-Navigacija sadrži Guest Registration (standardna kotizacija 100 EUR ili PAR zahtjev za oslobođenje uz kod) i Paper/Author Registration s postojećim paketima. Registracije gostiju spremaju se u privatnu kolekciju `guestRegistrations`; admin ih pregledava u Registracije i radovi. PAR kod zasad se provjerava ručno: službeni kod i kriteriji nisu dostavljeni. Unos koda sam po sebi ne odobrava oslobođenje. Status accepted za PAR zahtjev znači da je organizator odobrio zahtjev; standardna registracija ne obrađuje niti potvrđuje plaćanje. Za slanje je i dalje potreban odobren račun. Nakon objave aplikacije objavite ažurirani `firestore.rules`.
+Navigacija sadrži Guest Registration (standardna kotizacija 100 EUR ili PAR registracija uz jedinstven kod za 100% popusta) i Paper/Author Registration s postojećim paketima. Za registraciju gosta potreban je odobren račun; za predaju rada odobrena uloga izlagača ili administratora. Postojeće ručno odobrene prijave ostaju sačuvane.
+
+### Jednokratni kodovi popusta
+
+Admin → Kodovi popusta: odaberite 20%, 50% ili 100% i 1–100 kodova. Format je P20ABC / P50ABC / P100ABC, uz kriptografski nasumična tri velika slova i provjeru kolizije u Firestore transakciji. Za svaki postotak postoji 17.576 mogućih kombinacija. Kod se ne rezervira provjerom u obrascu, nego tek uspješnim slanjem registracije.
+
+`promoCodes/{code}` čuva godinu, postotak, autora i datum stvaranja te UID korisnika i datum iskorištavanja. `discountClaims/{uid}` čuva neizmjenjiv zapis za PILC 2027: kod, popust, UID, ime i e-mail u trenutku korištenja te vrstu registracije. Jedan kod po računu za jednu registraciju; popusti se ne zbrajaju i kod se ne oslobađa ponovnim uređivanjem ili odbijanjem prijave. Povijest se ne briše, a admin je može izvesti u CSV. Za buduću godinu potrebno je zasebno odvojiti evidenciju izdanja; postojeći zapisi ostaju arhiva za 2027.
+
+Kod, zapis korištenja i registracija spremaju se u istoj transakciji. Firestore pravila odbijaju samostalno trošenje koda, drugi račun, zamjenu postotka ili izmjenu povijesti. Naknadna izmjena prijave zadržava isti kod. Polje `promoCode` služi kao veza; mjerodavan postotak je u neizmjenjivom zapisu korištenja. Provjera koda prikazuje izračun; referentne autorske cijene i dalje čekaju potvrdu organizatora. Portal ne provodi plaćanje. Nakon nadogradnje objavite ažurirani `firestore.rules` prije korištenja novih funkcija.
 
 Digitalni Zbornik PILC dostupan je poveznicom na repozitorij PAR-a na početnoj stranici i stranici registracije.

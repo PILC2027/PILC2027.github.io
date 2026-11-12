@@ -110,15 +110,28 @@ test('public visitors can browse the site but personal pages require login',asyn
  await open(page,'signedout','#home');await expect(page.locator('.home-hero')).toBeVisible();
  await expect(page.locator('nav a')).toHaveText(['Home','Participant Registration','About','Programme','Contact']);
  await expect(page.locator('.avatar')).toHaveCount(0);
- for(const route of ['about','programme','papers','contact']){await page.locator('nav a[href="#'+route+'"]').click();await expect(page.locator('#auth-form')).toHaveCount(0);}
- await page.locator('nav a[href="#papers"]').click();await page.getByRole('button',{name:'Paper/Author Registration',exact:true}).click();await page.locator('.fee-card button').first().click();await expect(page.locator('#paper-form')).toHaveCount(0);
+ for(const route of ['about','programme','contact']){await page.locator('nav a[href="#'+route+'"]').click();await expect(page.locator('#auth-form')).toHaveCount(0);}
+ await page.locator('nav a[href="#papers"]').click();await expect(page.getByRole('heading',{name:'Create your account'})).toBeVisible();await expect(page.locator('.fee-card')).toHaveCount(0);
  await page.goto('/?test=signedout#profile');await expect(page.locator('#auth-form')).toBeVisible();
  expect(errors).toEqual([]);
 });
 test('participant registration separates guests and authors',async({page})=>{
  await open(page,'presenter','#papers');await expect(page.getByRole('heading',{name:'Participant Registration',exact:true})).toBeVisible();
  await page.getByRole('button',{name:'Select standard'}).click();await expect(page.locator('#guest-registration-form')).toContainText('100 EUR');
- await page.getByRole('button',{name:'Select PAR',exact:true}).click();await expect(page.getByLabel('PAR code',{exact:true})).toBeVisible();await page.getByLabel('PAR code',{exact:true}).fill('TEST');await page.locator('#guest-registration-form [name=terms]').check();await page.getByRole('button',{name:'Submit guest registration'}).click();await expect(page.getByRole('status')).toContainText('Registration received');
+ await page.getByRole('button',{name:'Select PAR',exact:true}).click();await expect(page.getByLabel(/^Discount code/)).toBeVisible();await page.getByLabel(/^Discount code/).fill('P100ABC');await page.locator('#guest-registration-form [name=terms]').check();await page.getByRole('button',{name:'Submit guest registration'}).click();await expect(page.getByRole('status')).toContainText('Registration received');
  await page.getByRole('button',{name:'Paper/Author Registration',exact:true}).click();await expect(page.locator('.fee-card')).toHaveCount(4);
  await expect(page.getByRole('link',{name:'Open proceedings · PDF'})).toHaveAttribute('href','https://repozitorij.par.hr/object/par:11/FILE0');
+});
+
+test('admin generates codes, previews and claims once, sees permanent history',async({page})=>{
+ await open(page,'admin','#admin');await page.locator('[data-admin-tab=promos]').click();
+ await page.getByLabel('Discount percentage').selectOption('50');await page.getByLabel('Number of codes').fill('2');await page.getByRole('button',{name:'Generate codes',exact:true}).click();
+ await expect(page.locator('.promo-code-list')).toBeVisible();const code=(await page.locator('.promo-code-list').innerText()).split(' · ')[0];expect(code).toMatch(/^P50[A-Z]{3}$/);
+ await page.locator('nav a[href="#papers"]').click();await page.getByRole('button',{name:'Select standard'}).click();await page.getByLabel(/^Discount code/).fill(code);
+ await page.getByRole('button',{name:'Check code',exact:true}).click();await expect(page.locator('.promo-result')).toContainText('100 EUR → 50 EUR');
+ await page.locator('#guest-registration-form [name=terms]').check();await page.getByRole('button',{name:'Submit guest registration'}).click();await expect(page.getByRole('status')).toContainText('Registration received');
+ await page.locator('nav a[href="#admin"]').click();await page.locator('[data-admin-tab=promos]').click();const row=page.locator('tr').filter({hasText:code});await expect(row).toContainText('Used');await expect(row).toContainText('test@example.com');
+ const pending=page.waitForEvent('download');await page.getByRole('button',{name:'Download codes & history · CSV'}).click();await (await pending).saveAs('tests/generated/promo-history.csv');
+ await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:'tests/generated/promos-mobile.png',fullPage:true});
+ await page.goto('/?test=admin#profile');
 });
