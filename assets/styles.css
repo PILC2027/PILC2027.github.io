@@ -113,3 +113,7 @@ nav a[href="#academy"]{max-width:none;white-space:nowrap;line-height:1.4}
 .home-hero>.venue-label svg{width:26px;height:26px}
 .page>.home-hero+.welcome-line{padding:18px 0;margin-top:0;margin-bottom:0;min-height:0}
 @media(max-width:700px){.home-hero>.venue-label{left:auto;right:20px;bottom:24px;text-align:right;font-size:16px}.page>.home-hero+.welcome-line{padding:15px 0;gap:12px;flex-wrap:wrap}}
+
+/* Anchor the headline over the sea, leaving the hotel visible. */
+.hero-title-line{display:block}
+@media(min-width:701px){.page>.home-hero{align-items:flex-start;padding-top:clamp(70px,5vw,100px)}.page>.home-hero .hero-copy{width:87%;margin:0 auto}.home-hero .hero-copy h1{font-size:clamp(44px,4.7vw,70px);max-width:720px;text-wrap:initial}}

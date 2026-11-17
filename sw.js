@@ -1,4 +1,4 @@
-const CACHE='pilc-shell-36f687d311dc';
+const CACHE='pilc-shell-bd3cbdf4fdf6';
 const OFFLINE=new URL('./offline.html',self.location).href;
 const SHELL=['./offline.html','./assets/icons/icon-192.png','./assets/icons/icon-512.png'];
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(SHELL)).then(()=>self.skipWaiting()));});
