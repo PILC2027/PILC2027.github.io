@@ -28,13 +28,13 @@ test('admin approves users and can add, edit and delete programme and presenters
 });
 test('responsive pages fit desktop and mobile in both languages and themes',async({page})=>{
  await open(page,'admin');
- for(const width of [1440,390]){await page.setViewportSize({width,height:900});for(const route of ['home','programme','profile','about','contact','papers','admin']){await page.goto('/?test=admin#'+route);await expect(page.locator('.loading-line')).toHaveCount(0);await expect(page.locator('.boot')).toHaveCount(0);const overflow=await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth);expect(overflow,`${route} ${width}`).toBe(false);if(['home','profile','admin'].includes(route))await page.screenshot({path:`tests/generated/${route}-${width}.png`,fullPage:true,animations:'disabled'});}await page.locator('[data-action=theme]').click();await page.getByLabel('Switch to Croatian').click();await page.goto('/?test=admin#home');await page.screenshot({path:`tests/generated/home-dark-hr-${width}.png`,fullPage:true,animations:'disabled'});await page.locator('[data-action=theme]').click();await page.getByLabel('Switch to English').click();}
+ for(const width of [1440,390]){await page.setViewportSize({width,height:900});for(const route of ['home','programme','academy','my-programme','profile','about','contact','papers','admin']){await page.goto('/?test=admin#'+route);await expect(page.locator('.loading-line')).toHaveCount(0);await expect(page.locator('.boot')).toHaveCount(0);const overflow=await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth);expect(overflow,`${route} ${width}`).toBe(false);if(['home','profile','admin'].includes(route))await page.screenshot({path:`tests/generated/${route}-${width}.png`,fullPage:true,animations:'disabled'});}await page.locator('[data-action=theme]').click();await page.getByLabel('Switch to Croatian').click();await page.goto('/?test=admin#home');await page.screenshot({path:`tests/generated/home-dark-hr-${width}.png`,fullPage:true,animations:'disabled'});await page.locator('[data-action=theme]').click();await page.getByLabel('Switch to English').click();}
  await page.goto('/?test=admin');await page.getByLabel('Open navigation').click();await expect(page.locator('#navigation')).toBeVisible();
 });
 test('production login page loads with actual Firebase SDK',async({page})=>{const errors=[];page.on('pageerror',err=>errors.push(err.message));await page.goto('/#login');await expect(page.getByRole('heading',{name:'Log in to PILC 2027'})).toBeVisible();await page.screenshot({path:'tests/generated/login-desktop.png',fullPage:true,animations:'disabled'});await page.setViewportSize({width:390,height:844});await page.screenshot({path:'tests/generated/login-mobile.png',fullPage:true,animations:'disabled'});expect(errors).toEqual([]);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);});
 test('admin can preview and save a GitHub Pages PDF template without Storage',async({page})=>{await open(page,'admin','#admin');await page.locator('[data-admin-tab=certificates]').click();await expect(page.locator('input[type=file]')).toHaveCount(0);await expect(page.getByLabel('Template path on this site')).toHaveValue('assets/documents/certificate-demo.pdf');const pending=page.waitForEvent('download');await page.getByRole('button',{name:'Preview with my name'}).click();const preview=await pending;await preview.saveAs('tests/generated/static-template-preview.pdf');await page.getByLabel('Publish certificates after the conference').check();await page.getByRole('button',{name:'Save settings'}).click();await expect(page.getByRole('status')).toContainText('settings saved');await page.getByLabel('Template path on this site').fill('assets/documents/missing.pdf');await page.getByRole('button',{name:'Save settings'}).click();await expect(page.getByRole('alert')).toContainText('PDF not found');});
 test('five-day programme supports unscheduled academy edits and calendar placeholders',async({page})=>{
- await open(page,'admin','#programme');
+ await open(page,'admin','#academy');
  await expect(page.locator('[data-day]')).toHaveCount(5);
  await expect(page.locator('[data-day="16"]')).toHaveAttribute('aria-pressed','true');
  await expect(page.locator('.session').first()).toContainText('Arrival and registration');
@@ -108,9 +108,9 @@ test('registration only opens after plan selection and preserves entered details
 test('public visitors can browse the site but personal pages require login',async({page})=>{
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await open(page,'signedout','#home');await expect(page.locator('.home-hero')).toBeVisible();
- await expect(page.locator('nav a')).toHaveText(['Home','Participant Registration','About','Programme','Contact']);
+ await expect(page.locator('nav a')).toHaveText(['Home','Participant Registration','About','Programme','Adriatic Leadership Academy','Contact']);
  await expect(page.locator('.avatar')).toHaveCount(0);
- for(const route of ['about','programme','contact']){await page.locator('nav a[href="#'+route+'"]').click();await expect(page.locator('#auth-form')).toHaveCount(0);}
+ for(const route of ['about','programme','academy','contact']){await page.locator('nav a[href="#'+route+'"]').click();await expect(page.locator('#auth-form')).toHaveCount(0);}
  await page.locator('nav a[href="#papers"]').click();await expect(page.getByRole('heading',{name:'Create your account'})).toBeVisible();await expect(page.locator('.fee-card')).toHaveCount(0);
  await page.goto('/?test=signedout#profile');await expect(page.locator('#auth-form')).toBeVisible();
  expect(errors).toEqual([]);
@@ -134,4 +134,15 @@ test('admin generates codes, previews and claims once, sees permanent history',a
  const pending=page.waitForEvent('download');await page.getByRole('button',{name:'Download codes & history · CSV'}).click();await (await pending).saveAs('tests/generated/promo-history.csv');
  await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:'tests/generated/promos-mobile.png',fullPage:true});
  await page.goto('/?test=admin#profile');
+});
+
+test('conference has two days, academy has five, saved programme is nested and banner is full width',async({page})=>{
+ await open(page,'guest','#programme');await expect(page.locator('[data-day]')).toHaveCount(2);await expect(page.locator('[data-day="18"]')).toHaveAttribute('aria-pressed','true');
+ expect(new URL(await page.locator('.button-row').first().getByRole('link',{name:'Google Calendar',exact:true}).getAttribute('href')).searchParams.get('dates')).toBe('20270318/20270320');
+ await expect(page.locator('#navigation a[href="#my-programme"]')).toHaveCount(0);await page.locator('.programme-options a[href="#my-programme"]').click();await expect(page.getByRole('heading',{name:'My programme',exact:true})).toBeVisible();
+ await page.locator('nav a[href="#academy"]').click();await expect(page.locator('[data-day]')).toHaveCount(5);await page.locator('[data-day="20"]').click();await expect(page.locator('[data-day="20"]')).toHaveAttribute('aria-pressed','true');
+ await page.locator('nav a[href="#programme"]').click();await expect(page.locator('[data-day]')).toHaveCount(2);await expect(page.locator('[data-day="18"]')).toHaveAttribute('aria-pressed','true');
+ await page.locator('nav a[href="#home"]').click();await expect(page.locator('.hero-copy p')).toHaveText('Where Ideas Meet, Connections Grow and Perspectives Shift. Be Part of the Conversation.');
+ await page.getByLabel('Switch to Croatian').click();await expect(page.locator('.hero-copy p')).toHaveText('Mjesto ideja, povezivanja i novih perspektiva. Budite dio razgovora.');
+ for(const width of [1440,390]){await page.setViewportSize({width,height:900});const bounds=await page.locator('.home-hero').boundingBox();expect(bounds.x).toBeCloseTo(0,0);expect(bounds.width).toBeCloseTo(await page.evaluate(()=>document.documentElement.clientWidth),0);}
 });

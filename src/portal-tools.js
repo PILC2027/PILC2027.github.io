@@ -13,8 +13,8 @@ export function cleanRichText(html){
   }
   return [...doc.body.childNodes].map(walk).join('');
 }
-export function googleCalendarUrl(session,language='en'){
-  const params=new URLSearchParams({action:'TEMPLATE',text:session?(language==='hr'?session.titleHr:session.titleEn):'PILC 2027 — Where leaders meet future leaders',dates:session&&!session.time?('202703'+session.day+'/202703'+String(Number(session.day)+1)):session?`202703${session.day}T${session.time.replace(':','')}00/202703${session.day}T${session.end.replace(':','')}00`:'20270316/20270321',ctz:'Europe/Zagreb',location:session?`${session.room||'Rijeka'}`:'Rijeka, Croatia',details:'PILC 2027 · '+(language==='hr'?'Provjerite aktualnu satnicu u portalu. Aktivnosti bez potvrđene satnice spremaju se kao cjelodnevni podsjetnici.':'Check the portal for the latest programme. Events without confirmed times are saved as all-day placeholders.')});
+export function googleCalendarUrl(session,language='en',scope='all'){
+  const params=new URLSearchParams({action:'TEMPLATE',text:session?(language==='hr'?session.titleHr:session.titleEn):'PILC 2027 — Where leaders meet future leaders',dates:session&&!session.time?('202703'+session.day+'/202703'+String(Number(session.day)+1)):session?`202703${session.day}T${session.time.replace(':','')}00/202703${session.day}T${session.end.replace(':','')}00`:scope==='conference'?'20270318/20270320':'20270316/20270321',ctz:'Europe/Zagreb',location:session?`${session.room||'Rijeka'}`:'Rijeka, Croatia',details:'PILC 2027 · '+(language==='hr'?'Provjerite aktualnu satnicu u portalu. Aktivnosti bez potvrđene satnice spremaju se kao cjelodnevni podsjetnici.':'Check the portal for the latest programme. Events without confirmed times are saved as all-day placeholders.')});
   return 'https://calendar.google.com/calendar/render?'+params;
 }
 export function participantsCsv(users){

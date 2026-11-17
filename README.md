@@ -140,3 +140,10 @@ Admin → Kodovi popusta: odaberite 20%, 50% ili 100% i 1–100 kodova. Format j
 Kod, zapis korištenja i registracija spremaju se u istoj transakciji. Firestore pravila odbijaju samostalno trošenje koda, drugi račun, zamjenu postotka ili izmjenu povijesti. Naknadna izmjena prijave zadržava isti kod. Polje `promoCode` služi kao veza; mjerodavan postotak je u neizmjenjivom zapisu korištenja. Provjera koda prikazuje izračun; referentne autorske cijene i dalje čekaju potvrdu organizatora. Portal ne provodi plaćanje. Nakon nadogradnje objavite ažurirani `firestore.rules` prije korištenja novih funkcija.
 
 Digitalni Zbornik PILC dostupan je poveznicom na repozitorij PAR-a na početnoj stranici i stranici registracije.
+
+
+## Podjela programa (17. studenoga 2026.)
+
+Javna stranica `#programme` prikazuje konferencijski program 18. i 19. ožujka. `#academy` (Adriatic Leadership Academy) prikazuje svih pet dana postojećeg programa, 16.–20. ožujka. Oba prikaza koriste iste zapise sesija i administratorske izmjene. Moj program je opcija unutar Programa za odobrene korisnike i zadržava spremljene sesije svih pet dana. Kalendarski izvoz konferencijskog programa obuhvaća 18.–19., a akademije svih pet dana.
+
+Za buduću migraciju s Firebasea korisnik je potvrdio da su trenutačni računi testni i mogu se ponovno kreirati. Ova izmjena ne briše postojeće račune niti podatke.
