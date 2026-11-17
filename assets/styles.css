@@ -88,7 +88,7 @@ body:has(main.page){
 .page:has(>.home-hero)>:not(.home-hero){width:min(1200px,91%);margin-left:auto;margin-right:auto}
 .page>.home-hero{border-radius:0;width:100%}
 
-nav a[href="#academy"]{max-width:145px;white-space:normal;line-height:1.4}
+nav a[href="#academy"]{max-width:none;white-space:nowrap;line-height:1.4}
 .programme-options{margin-bottom:24px;padding-bottom:16px;flex-wrap:wrap}
 @media(max-width:700px){.page:has(>.home-hero)>:not(.home-hero){width:90%}.page>.home-hero .hero-copy{padding:34px 5%}}
 
@@ -103,3 +103,6 @@ nav a[href="#academy"]{max-width:145px;white-space:normal;line-height:1.4}
 .home-hero>.venue-label{left:auto;right:5%;bottom:26px;padding:0;background:none;color:#fff;max-width:90%}
 @media(min-width:1440px){.home-hero>.venue-label{right:max(5%,calc((100% - 1200px)/2))}}
 @media(max-width:700px){.page>.home-hero{min-height:710px;align-items:flex-start;padding:42px 0 210px}.home-hero .hero-background{object-position:64% center}.home-hero:after{background:linear-gradient(180deg,rgba(5,20,42,.92),rgba(5,20,42,.78) 38%,rgba(5,20,42,.2) 74%,rgba(5,20,42,.75))}.home-hero .hero-copy h1{font-size:clamp(34px,9.5vw,46px)}.home-hero .hero-copy p{font-size:13px}.home-hero>.venue-label{left:5%;right:auto;bottom:25px}}
+
+@media(min-width:1201px) and (max-width:1380px){.site-header{gap:14px;padding-inline:3%}nav{gap:12px}nav a{font-size:11px}}
+@media(max-width:1200px){nav{display:none;position:absolute;left:0;right:0;top:100%;padding:20px 5%;background:var(--bg);border-bottom:1px solid var(--line)}nav.open{display:flex;flex-wrap:wrap}.menu-button{display:inline-flex}}
