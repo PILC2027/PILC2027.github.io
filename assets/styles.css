@@ -106,3 +106,10 @@ nav a[href="#academy"]{max-width:none;white-space:nowrap;line-height:1.4}
 
 @media(min-width:1201px) and (max-width:1380px){.site-header{gap:14px;padding-inline:3%}nav{gap:12px}nav a{font-size:11px}}
 @media(max-width:1200px){nav{display:none;position:absolute;left:0;right:0;top:100%;padding:20px 5%;background:var(--bg);border-bottom:1px solid var(--line)}nav.open{display:flex;flex-wrap:wrap}.menu-button{display:inline-flex}}
+
+.page:has(>.home-hero){padding-top:0}
+.home-hero>.venue-label{left:auto;right:clamp(20px,2.5vw,48px);bottom:clamp(24px,2.5vw,44px);font-size:clamp(16px,1.3vw,22px);font-weight:600;text-shadow:0 2px 8px #000;line-height:1.5}
+.home-hero>.venue-label small{font-size:clamp(11px,.85vw,14px);font-weight:400}
+.home-hero>.venue-label svg{width:26px;height:26px}
+.page>.home-hero+.welcome-line{padding:18px 0;margin-top:0;margin-bottom:0;min-height:0}
+@media(max-width:700px){.home-hero>.venue-label{left:auto;right:20px;bottom:24px;text-align:right;font-size:16px}.page>.home-hero+.welcome-line{padding:15px 0;gap:12px;flex-wrap:wrap}}
