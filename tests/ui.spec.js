@@ -146,3 +146,34 @@ test('conference has two days, academy has five, saved programme is nested and b
  await page.getByLabel('Switch to Croatian').click();await expect(page.locator('.hero-copy p')).toHaveText('Mjesto ideja, povezivanja i novih perspektiva. Budite dio razgovora.');
  for(const width of [1440,390]){await page.setViewportSize({width,height:900});const bounds=await page.locator('.home-hero').boundingBox();expect(bounds.x).toBeCloseTo(0,0);expect(bounds.width).toBeCloseTo(await page.evaluate(()=>document.documentElement.clientWidth),0);}
 });
+
+
+test('paper guidance is public and local in both languages',async({page})=>{
+ await open(page,'signedout','#paper-guidelines');
+ await expect(page.getByRole('heading',{name:'Paper submission guidance'})).toBeVisible();
+ await expect(page.locator('main')).toContainText('400 words');
+ await page.getByLabel('Switch to Croatian').click();
+ await expect(page.getByRole('heading',{name:'Upute za predaju rada'})).toBeVisible();
+});
+
+test('saved paper summary downloads without a new registration',async({page})=>{
+ await open(page,'presenter','#papers');await fillRegistration(page);
+ await page.getByLabel('Paper title').fill('Summary check');await page.getByLabel('Abstract').fill('Research summary.');
+ await page.getByRole('button',{name:'Submit paper',exact:true}).click();
+ const event=page.waitForEvent('download');await page.getByRole('button',{name:'Download registration summary'}).click();
+ const file=await event;const content=await readFile(await file.path(),'utf8');
+ expect(content).toContain('Summary check');expect(content).toContain('not payment');
+ expect(content).not.toContain('IBAN');
+});
+
+
+test('admin prepares confirmation draft from an existing submission',async({page})=>{
+ await open(page,'admin','#papers');await fillRegistration(page);
+ await page.getByLabel('Paper title').fill('Admin draft check');await page.getByLabel('Abstract').fill('Research summary.');
+ await page.getByRole('button',{name:'Submit paper',exact:true}).click();
+ await page.evaluate(()=>{location.hash='admin';});
+ await page.locator('[data-admin-tab=papers]').click();
+ const event=page.waitForEvent('download');await page.getByRole('button',{name:'Download confirmation email draft'}).click();
+ const file=await event;const content=await readFile(await file.path(),'utf8');expect(content).toContain('Admin draft check');
+ await expect(page.getByRole('status')).toContainText('No email has been sent');
+});
