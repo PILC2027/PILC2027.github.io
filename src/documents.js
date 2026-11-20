@@ -22,7 +22,7 @@ export async function certificate(profile,{demo=false,template=null,settings={}}
     center(page,font,'sudjelovao/la u programu / participated in the programme of',224,13,muted);
     center(page,font,'PAR International Leadership Conference',192,21);
     center(page,font,'WHERE LEADERS MEET FUTURE LEADERS',157,14);
-    center(page,font,'16.–20. 03. 2027.  ·  Rijeka / Opatija, Croatia',120,13,muted);
+    center(page,font,'18.–20. 03. 2027.  ·  Rijeka / Opatija, Croatia',120,13,muted);
     center(page,font,'PAR University of Applied Sciences · Veleučilište PAR',70,11,muted);
   }
   const name=`${profile.firstName} ${profile.lastName}`;
@@ -50,7 +50,7 @@ export async function badge(profile,role){
   center(page,font,profile.affiliation||'',213,12,muted);
   page.drawText('WHERE LEADERS MEET',{x:24,y:78,size:13,font,color:rgb(1,1,1)});
   page.drawText('FUTURE LEADERS',{x:24,y:56,size:17,font,color:gold});
-  page.drawText('16–20 MARCH 2027 · RIJEKA / OPATIJA',{x:24,y:30,size:8,font,color:rgb(1,1,1)});
+  page.drawText('18–20 MARCH 2027 · RIJEKA / OPATIJA',{x:24,y:30,size:8,font,color:rgb(1,1,1)});
   center(page,font,`ID: ${profile.id}`,10,6,rgb(.8,.86,.93));
   return pdf.save();
 }
@@ -71,8 +71,8 @@ export async function submissionReport(rows,language='en'){
  for(let i=0;i<rows.length;i++){
    if(i||y<600)next();const s=rows[i],r=s.registration||{};
    text((i+1)+'. '+s.title,17);text(tr('Authors: ','Autori: ')+s.authors,12);
-   const fields=[['institution','Institution / Company','Ustanova / tvrtka'],['address','Billing address','Adresa za račun'],['city','City','Grad'],['country','Countries','Države'],['vat','VAT / Tax ID','OIB / porezni broj'],['contactEmail','First author email','E-mail prvog autora'],['phone','First author phone','Telefon prvog autora'],['registrationType','Registration type','Vrsta registracije'],['payingAs','Paying as','Plaćanje kao'],['keywords','Keywords','Ključne riječi']];
-   const labels={one:tr('1 author','1 autor'),two:tr('2 authors','2 autora'),three:tr('3+ authors','3+ autora'),par:tr('PAR professor','Profesor PAR-a'),company:tr('Company / institution','Tvrtka / ustanova'),person:tr('Person','Fizička osoba')};
+   const fields=[['institution','Institution / Company','Ustanova / tvrtka'],['address','Billing address','Adresa za račun'],['city','City','Grad'],['country','Countries','Države'],['vat','VAT / Tax ID','OIB / porezni broj'],['contactEmail','First author email','E-mail prvog autora'],['phone','First author phone','Telefon prvog autora'],['registrationType','Registration type','Vrsta registracije'],['payingAs','Paying as','Plaćanje kao'],['keywords','Keywords','Ključne riječi'],['paperCategory','Paper category','Kategorija rada'],['jelCodes','JEL codes','JEL oznake']];
+   const labels={one:tr('1 author','1 autor'),two:tr('2 authors','2 autora'),three:tr('3+ authors','3+ autora'),par:tr('PAR student / lecturer','PAR student / predavač'),company:tr('Company / institution','Tvrtka / ustanova'),person:tr('Person','Fizička osoba')};
    for(const [key,en,cr] of fields)text(tr(en,cr)+': '+(['registrationType','payingAs'].includes(key)?labels[r[key]]||'—':r[key]||'—'));
    text(tr('Paper status: ','Status rada: ')+(s.status||'—'));
    text(tr('Fee waiver status: ','Status oslobođenja od kotizacije: ')+(r.registrationType==='par'?(s.feeStatus||'pending'):tr('Not requested','Nije zatraženo')));

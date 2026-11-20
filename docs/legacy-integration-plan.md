@@ -53,3 +53,19 @@ Automatski FTPS GitHub Actions workflow uklonjen je 19. studenoga 2026. (commit 
 - scripts/package-site.py pakira samo javne datoteke i preusmjeravanja s ispravnim dozvolama. --test dodaje noindex. SQL, postavke poslužitelja i docs nisu u paketu.
 
 Još NIJE aktivirano: automatsko slanje e-pošte, bankovni podaci i obračun PDV-a za 2027., evidencija stvarnih uplata, studentski paketi, upload datoteka i migracija baze. Potrebni su organizatorski odgovori i konfiguracija poslužitelja. Ne zamjenjivati produkcijsku stranicu dok ti zahtjevi za otvaranje prijava nisu razriješeni.
+
+
+## Potvrde iz maila 20. studenoga 2026. i provedene izmjene
+
+Ove potvrde zamjenjuju ranije otvorena pitanja o datumima i cijenama:
+- PILC konferencija 18.–20. ožujka; ALA prikaz ostaje 16.–20.
+- Registracija sudionika javno pokazuje dvije podopcije i cijene; račun se traži tek nakon odabira paketa. Predaja ostaje dostupna odobrenim računima.
+- Gost 200 EUR + PDV rano / 250 EUR + PDV redovno. Autori 290/420/530 rano, 340/470/580 redovno, bez dodatnog PDV-a. Rana prijava do 1. veljače 2027. (u aplikaciji uključivo, Europe/Zagreb).
+- Studenti 50% primjenjive kotizacije; PAR studenti i predavači besplatno. Koristi se postojeći provjereni sustav individualnih kodova, bez samostalnog dodjeljivanja popusta i bez novog paralelnog registra.
+- Dosadašnji primatelji/računi potvrđeni zasad: Veleučilište PAR za autore, PAR d.o.o. za goste. Ne slati automatske zahtjeve za uplatu dok komunikacija i poslužitelj nisu potvrđeni.
+- Sažetak do 19. veljače 2027.; cijeli rad do 30. travnja. Ne objavljivati rok prihvaćanja, prema izričitom mailu, iako ga prilog spominje.
+- Objavljeno svih 20 panela po pet cjelina na HR/EN, bez izmišljanja satnice, dvorana ili govornika.
+- Nove lokalne HR/EN upute, 200–250 riječi, 3–6 ključnih riječi, 2–3 JEL oznake i kategorija; naslov najviše 15 riječi. Nove prijave pohranjuju kategoriju/JEL u postojećem dokumentu. Pravila zadržavaju kompatibilnost sa starim zapisima bez tih polja.
+- Službena predaja: .docx sažetak jednom datotekom; cijeli rad naslovnom stranicom i anonimiziranim rukopisom na conference@par.hr. Programski odbor e-mailom potvrđuje primitak. Portal ne predstavlja spremanje obrasca kao tu potvrdu.
+- Prije uploada novog ZIP-a objaviti ažurirani firestore.rules. Pravila nisu automatski objavljena na Firebase.
+- Još čekamo potvrdu slanja s info@par-conference.com i konačne uvjete/privatnost. Nema aktivnog SMTP-a, kartične naplate ni migracije baze.

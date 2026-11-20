@@ -47,7 +47,7 @@ test('registration data and PAR fee waiver are validated and admin-controlled',a
  await assertSucceeds(setDoc(ref,row));
  await assertFails(updateDoc(ref,{feeStatus:'approved',updatedAt:serverTimestamp()}));
  await assertFails(setDoc(ref,{...row,registration:{...registration,termsAccepted:false}}));
- await assertFails(setDoc(ref,{...row,registration:{...registration,keywords:'a,b,c,d,e,f'}}));
+ await assertFails(setDoc(ref,{...row,registration:{...registration,keywords:'a,b,c,d,e,f,g'}}));
  await assertFails(setDoc(ref,{...row,abstract:Array(401).fill('word').join(' ')}));
  await assertFails(setDoc(ref,{...row,registration:{...registration,payingAs:'company'}}));
  await assertSucceeds(updateDoc(doc(ctx('admin').firestore(),'submissions','presenter'),{feeStatus:'approved',updatedAt:serverTimestamp()}));
@@ -117,4 +117,17 @@ test('PAR guest registration only accepts a 100 percent code',async()=>{
  await setDoc(doc(ctx('admin').firestore(),'promoCodes','P20PAR'),promoRow());await setDoc(doc(ctx('admin').firestore(),'promoCodes','P100PAR'),promoRow(100));
  async function submit(code,percent){const b=writeBatch(db);b.update(doc(db,'promoCodes',code),{usedBy:'par-guest',usedAt:serverTimestamp()});b.set(doc(db,'discountClaims','par-guest'),{code,percent,year:2027,target:'guestRegistrations',ownerId:'par-guest',name:'Ana Horvat',email:'person@example.com',claimedAt:serverTimestamp()});b.set(doc(db,'guestRegistrations','par-guest'),{...guestRow('par-guest',code),plan:'par'});return b.commit();}
  await assertFails(submit('P20PAR',20));await assertSucceeds(submit('P100PAR',100));
+});
+
+
+test('2027 author metadata validates abstract, keywords, JEL and category',async()=>{
+ const registration={institution:'PAR',address:'Test 1',city:'Rijeka',country:'Croatia',vat:'',contactEmail:'test@example.com',phone:'123',registrationType:'one',payingAs:'person',keywords:'Leadership,Education,People',termsAccepted:true,paperCategory:'original',jelCodes:'M12,O15'};
+ const row={title:'Research',authors:'Ana',abstract:Array(200).fill('word').join(' '),paperUrl:'',ownerId:'presenter',status:'submitted',updatedAt:serverTimestamp(),registration,feeStatus:'pending'};
+ const ref=doc(ctx('presenter').firestore(),'submissions','presenter');
+ await assertSucceeds(setDoc(ref,row));
+ for(const count of [199,251])await assertFails(setDoc(ref,{...row,abstract:Array(count).fill('word').join(' ')}));
+ await assertFails(setDoc(ref,{...row,registration:{...registration,jelCodes:'bad'}}));
+ await assertFails(setDoc(ref,{...row,registration:{...registration,paperCategory:'invented'}}));
+ await assertFails(setDoc(ref,{...row,registration:{...registration,keywords:'one,two'}}));
+ await assertSucceeds(setDoc(ref,{...row,registration:{...registration,keywords:'a,b,c,d,e,f'}}));
 });

@@ -20,7 +20,7 @@ test('profile changes update badge, certificate is locked, PDF handles Croatian 
  event=page.waitForEvent('download');await page.getByRole('button',{name:'Download badge'}).click();file=await event;await file.saveAs('tests/generated/badge.pdf');await page.screenshot({path:'tests/generated/profile-desktop.png',fullPage:true,animations:'disabled'});
  await page.goto('/?test=guest#admin');await expect(page.getByRole('heading',{name:'Administrator access required'})).toBeVisible();
 });
-test('presenter can submit a PDF link and update metadata',async({page})=>{await open(page,'presenter','#papers');await fillRegistration(page);await page.getByLabel('Paper title').fill('Leadership research');await page.getByLabel('Abstract').fill('Research into future leadership.');await page.getByLabel('Link to your PDF paper').fill('https://example.com/paper.pdf');await page.getByRole('button',{name:'Submit paper',exact:true}).click();await expect(page.getByRole('button',{name:'Resubmit paper'})).toBeVisible();});
+test('presenter can submit a PDF link and update metadata',async({page})=>{await open(page,'presenter','#papers');await fillRegistration(page);await page.getByLabel('Paper title').fill('Leadership research');await page.getByLabel('Abstract').fill(('Research into future leadership. '+ 'research '.repeat(210)).trim());await page.getByLabel('Optional link to your manuscript').fill('https://example.com/paper.pdf');await page.getByRole('button',{name:'Submit paper',exact:true}).click();await expect(page.getByRole('button',{name:'Resubmit paper'})).toBeVisible();});
 test('admin approves users and can add, edit and delete programme and presenters',async({page})=>{
  await open(page,'admin','#admin');await page.getByRole('button',{name:'Approve',exact:true}).click();await expect(page.locator('tr').filter({hasText:'Ana Horvat'}).locator('.pill')).toHaveText('Approved');await expect(page.locator('tr').filter({hasText:'Ana Horvat'}).locator('select')).toHaveValue('presenter');
  await page.locator('[data-admin-tab=programme]').click();await page.getByLabel('Title · English').fill('New session');await page.getByLabel('Title · Croatian').fill('Nova sesija');await page.getByLabel('Format (EN / HR)').fill('Panel');await page.getByLabel(/^Start/).fill('09:00');await page.getByLabel(/^End/).fill('10:00');await page.getByLabel('Room (EN / HR)').fill('A');await page.getByRole('button',{name:'Save session'}).click();await expect(page.locator('.admin-item h3').filter({hasText:'New session'})).toHaveCount(1);await page.locator('.admin-item').filter({hasText:'New session'}).getByRole('button',{name:'Edit',exact:true}).click();await page.getByLabel('Title · English').fill('Edited session');await page.getByRole('button',{name:'Save session'}).click();await expect(page.locator('.admin-item h3').filter({hasText:'Edited session'})).toHaveCount(1);page.on('dialog',d=>d.accept());await page.locator('.admin-item').filter({hasText:'Edited session'}).getByRole('button',{name:'Delete',exact:true}).click();await expect(page.locator('.admin-item').filter({hasText:'Edited session'})).toHaveCount(0);
@@ -53,22 +53,22 @@ async function fillRegistration(page){
  await page.getByLabel('City',{exact:true}).fill('Rijeka');
  await page.getByLabel('Countries').fill('Croatia');
  await page.getByLabel('First author phone').fill('+385 51 123456');
- await page.getByLabel('Paying as').selectOption('person');
- await page.getByLabel('Keywords').fill('Leadership, Education');
+ await page.getByLabel('Paying as').selectOption('person');await page.getByLabel('JEL codes').fill('M12, O15');
+ await page.getByLabel('Keywords').fill('Leadership, Education, People');
  await page.locator('[name=termsAccepted]').check();
 }
 test('PAR fee request validates abstract and keywords, saves abstract-only registration',async({page})=>{
- await open(page,'presenter','#papers');await page.getByRole('button',{name:'Paper/Author Registration',exact:true}).click();await page.getByRole('article').filter({hasText:'PAR professor'}).getByRole('button',{name:'Select'}).click();
+ await open(page,'presenter','#papers');await page.getByRole('button',{name:'Paper/Author Registration',exact:true}).click();await page.getByRole('article').filter({hasText:'PAR students and lecturers'}).getByRole('button',{name:'Select'}).click();
  await expect(page.getByLabel('Registration type')).toHaveValue('par');
  await fillRegistration(page);await page.getByLabel('Paper title').fill('Leadership');
  await page.getByLabel('Abstract').fill('word '.repeat(401));
  await page.getByRole('button',{name:'Submit paper',exact:true}).click();
- await expect(page.getByRole('alert')).toContainText('400 words');
- await page.getByLabel('Abstract').fill('A valid research abstract.');
- await page.getByLabel('Keywords').fill('a,b,c,d,e,f');
+ await expect(page.getByRole('alert')).toContainText('200–250 words');
+ await page.getByLabel('Abstract').fill(('A valid research abstract. '+ 'research '.repeat(210)).trim());
+ await page.getByLabel('Keywords').fill('a,b,c,d,e,f,g');
  await page.getByRole('button',{name:'Submit paper',exact:true}).click();
- await expect(page.getByRole('alert')).toContainText('1–5 keywords');
- await page.getByLabel('Keywords').fill('Leadership, Education');
+ await expect(page.getByRole('alert')).toContainText('3–6 keywords');
+ await page.getByLabel('Keywords').fill('Leadership, Education, People');
  await page.getByRole('button',{name:'Submit paper',exact:true}).click();
  await expect(page.getByRole('button',{name:'Resubmit paper'})).toBeVisible();
  await expect(page.locator('#paper-registration')).toContainText('Awaiting organiser verification');
@@ -81,7 +81,7 @@ test('admin sees billing data and can approve the PAR waiver separately',async({
  await open(page,'admin','#papers');await fillRegistration(page);
  await page.getByLabel('Registration type').selectOption('par');
  await page.getByLabel('Paper title').fill('Admin research');
- await page.getByLabel('Abstract').fill('Research abstract.');
+ await page.getByLabel('Abstract').fill(('Research abstract. '+ 'research '.repeat(210)).trim());
  await page.getByRole('button',{name:'Submit paper',exact:true}).click();
  await expect(page.getByRole('button',{name:'Resubmit paper'})).toBeVisible();
  await page.locator('nav a[href="#admin"]').click();
@@ -111,13 +111,13 @@ test('public visitors can browse the site but personal pages require login',asyn
  await expect(page.locator('nav a')).toHaveText(['Home','Participant Registration','About','Programme','Adriatic Leadership Academy','Contact']);
  await expect(page.locator('.avatar')).toHaveCount(0);
  for(const route of ['about','programme','academy','contact']){await page.locator('nav a[href="#'+route+'"]').click();await expect(page.locator('#auth-form')).toHaveCount(0);}
- await page.locator('nav a[href="#papers"]').click();await expect(page.getByRole('heading',{name:'Create your account'})).toBeVisible();await expect(page.locator('.fee-card')).toHaveCount(0);
+ await page.locator('nav a[href="#papers"]').click();await expect(page.locator('#auth-form')).toHaveCount(0);await page.getByRole('button',{name:'Paper/Author Registration',exact:true}).click();await expect(page.locator('.fee-card')).toHaveCount(4);await page.locator('.fee-card').first().getByRole('button',{name:'Select'}).click();await expect(page.getByRole('heading',{name:'Create your account'})).toBeVisible();
  await page.goto('/?test=signedout#profile');await expect(page.locator('#auth-form')).toBeVisible();
  expect(errors).toEqual([]);
 });
 test('participant registration separates guests and authors',async({page})=>{
  await open(page,'presenter','#papers');await expect(page.getByRole('heading',{name:'Participant Registration',exact:true})).toBeVisible();
- await page.getByRole('button',{name:'Select standard'}).click();await expect(page.locator('#guest-registration-form')).toContainText('100 EUR');
+ await page.getByRole('button',{name:'Select standard'}).click();await expect(page.locator('#guest-registration-form')).toContainText('200 EUR');
  await page.getByRole('button',{name:'Select PAR',exact:true}).click();await expect(page.getByLabel(/^Discount code/)).toBeVisible();await page.getByLabel(/^Discount code/).fill('P100ABC');await page.locator('#guest-registration-form [name=terms]').check();await page.getByRole('button',{name:'Submit guest registration'}).click();await expect(page.getByRole('status')).toContainText('Registration received');
  await page.getByRole('button',{name:'Paper/Author Registration',exact:true}).click();await expect(page.locator('.fee-card')).toHaveCount(4);
  await expect(page.getByRole('link',{name:'Open proceedings · PDF'})).toHaveAttribute('href','https://repozitorij.par.hr/object/par:11/FILE0');
@@ -128,7 +128,7 @@ test('admin generates codes, previews and claims once, sees permanent history',a
  await page.getByLabel('Discount percentage').selectOption('50');await page.getByLabel('Number of codes').fill('2');await page.getByRole('button',{name:'Generate codes',exact:true}).click();
  await expect(page.locator('.promo-code-list')).toBeVisible();const code=(await page.locator('.promo-code-list').innerText()).split(' · ')[0];expect(code).toMatch(/^P50[A-Z]{3}$/);
  await page.locator('nav a[href="#papers"]').click();await page.getByRole('button',{name:'Select standard'}).click();await page.getByLabel(/^Discount code/).fill(code);
- await page.getByRole('button',{name:'Check code',exact:true}).click();await expect(page.locator('.promo-result')).toContainText('100 EUR → 50 EUR');
+ await page.getByRole('button',{name:'Check code',exact:true}).click();await expect(page.locator('.promo-result')).toContainText('200 EUR → 100 EUR');
  await page.locator('#guest-registration-form [name=terms]').check();await page.getByRole('button',{name:'Submit guest registration'}).click();await expect(page.getByRole('status')).toContainText('Registration received');
  await page.locator('nav a[href="#admin"]').click();await page.locator('[data-admin-tab=promos]').click();const row=page.locator('tr').filter({hasText:code});await expect(row).toContainText('Used');await expect(row).toContainText('test@example.com');
  const pending=page.waitForEvent('download');await page.getByRole('button',{name:'Download codes & history · CSV'}).click();await (await pending).saveAs('tests/generated/promo-history.csv');
@@ -136,13 +136,13 @@ test('admin generates codes, previews and claims once, sees permanent history',a
  await page.goto('/?test=admin#profile');
 });
 
-test('conference has two days, academy has five, saved programme is nested and banner is full width',async({page})=>{
- await open(page,'guest','#programme');await expect(page.locator('[data-day]')).toHaveCount(2);await expect(page.locator('[data-day="18"]')).toHaveAttribute('aria-pressed','true');
- expect(new URL(await page.locator('.button-row').first().getByRole('link',{name:'Google Calendar',exact:true}).getAttribute('href')).searchParams.get('dates')).toBe('20270318/20270320');
+test('conference has three days, academy has five, saved programme is nested and banner is full width',async({page})=>{
+ await open(page,'guest','#programme');await expect(page.locator('[data-day]')).toHaveCount(3);await expect(page.locator('[data-day="18"]')).toHaveAttribute('aria-pressed','true');
+ expect(new URL(await page.locator('.button-row').first().getByRole('link',{name:'Google Calendar',exact:true}).getAttribute('href')).searchParams.get('dates')).toBe('20270318/20270321');
  await expect(page.locator('#navigation a[href="#my-programme"]')).toHaveCount(0);await page.locator('.programme-options a[href="#my-programme"]').click();await expect(page.getByRole('heading',{name:'My programme',exact:true})).toBeVisible();
  await page.locator('nav a[href="#academy"]').click();await expect(page.locator('[data-day]')).toHaveCount(5);await page.locator('[data-day="20"]').click();await expect(page.locator('[data-day="20"]')).toHaveAttribute('aria-pressed','true');
- await page.locator('nav a[href="#programme"]').click();await expect(page.locator('[data-day]')).toHaveCount(2);await expect(page.locator('[data-day="18"]')).toHaveAttribute('aria-pressed','true');
- await page.locator('nav a[href="#home"]').click();await expect(page.locator('.hero-copy p')).toHaveText('Where Ideas Meet, Connections Grow and Perspectives Shift. Be Part of the Conversation.');
+ await page.locator('nav a[href="#programme"]').click();await expect(page.locator('[data-day]')).toHaveCount(3);await expect(page.locator('[data-day="18"]')).toHaveAttribute('aria-pressed','true');
+ await page.locator('nav a[href="#home"]').click();await expect(page.locator('.hero-copy p')).toHaveText('Where ideas meet, connections grow and perspectives shift. Be part of the conversation.');
  await page.getByLabel('Switch to Croatian').click();await expect(page.locator('.hero-copy p')).toHaveText('Mjesto ideja, povezivanja i novih perspektiva. Budite dio razgovora.');
  for(const width of [1440,390]){await page.setViewportSize({width,height:900});const bounds=await page.locator('.home-hero').boundingBox();expect(bounds.x).toBeCloseTo(0,0);expect(bounds.width).toBeCloseTo(await page.evaluate(()=>document.documentElement.clientWidth),0);}
 });
@@ -150,15 +150,15 @@ test('conference has two days, academy has five, saved programme is nested and b
 
 test('paper guidance is public and local in both languages',async({page})=>{
  await open(page,'signedout','#paper-guidelines');
- await expect(page.getByRole('heading',{name:'Paper submission guidance'})).toBeVisible();
- await expect(page.locator('main')).toContainText('400 words');
+ await expect(page.getByRole('heading',{name:'Author Guidelines'})).toBeVisible();
+ await expect(page.locator('main')).toContainText('200–250 words');
  await page.getByLabel('Switch to Croatian').click();
- await expect(page.getByRole('heading',{name:'Upute za predaju rada'})).toBeVisible();
+ await expect(page.getByRole('heading',{name:'Upute za autore'})).toBeVisible();
 });
 
 test('saved paper summary downloads without a new registration',async({page})=>{
  await open(page,'presenter','#papers');await fillRegistration(page);
- await page.getByLabel('Paper title').fill('Summary check');await page.getByLabel('Abstract').fill('Research summary.');
+ await page.getByLabel('Paper title').fill('Summary check');await page.getByLabel('Abstract').fill(('Research summary. '+ 'research '.repeat(210)).trim());
  await page.getByRole('button',{name:'Submit paper',exact:true}).click();
  const event=page.waitForEvent('download');await page.getByRole('button',{name:'Download registration summary'}).click();
  const file=await event;const content=await readFile(await file.path(),'utf8');
@@ -169,11 +169,23 @@ test('saved paper summary downloads without a new registration',async({page})=>{
 
 test('admin prepares confirmation draft from an existing submission',async({page})=>{
  await open(page,'admin','#papers');await fillRegistration(page);
- await page.getByLabel('Paper title').fill('Admin draft check');await page.getByLabel('Abstract').fill('Research summary.');
+ await page.getByLabel('Paper title').fill('Admin draft check');await page.getByLabel('Abstract').fill(('Research summary. '+ 'research '.repeat(210)).trim());
  await page.getByRole('button',{name:'Submit paper',exact:true}).click();
  await page.evaluate(()=>{location.hash='admin';});
  await page.locator('[data-admin-tab=papers]').click();
  const event=page.waitForEvent('download');await page.getByRole('button',{name:'Download confirmation email draft'}).click();
  const file=await event;const content=await readFile(await file.path(),'utf8');expect(content).toContain('Admin draft check');
  await expect(page.getByRole('status')).toContainText('No email has been sent');
+});
+
+
+test('published panels and public fees are bilingual and do not gate browsing',async({page})=>{
+ await open(page,'signedout','#programme');await expect(page.locator('.panel-topic')).toHaveCount(20);
+ await expect(page.locator('.panel-topic').first()).toContainText('From Power to Purpose');
+ await page.getByLabel('Switch to Croatian').click();await expect(page.locator('.panel-topic').first()).toContainText('Od moći do svrhe');
+ await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ await page.screenshot({path:'tests/generated/panels-hr-mobile.png',fullPage:true});
+ await page.evaluate(()=>{location.hash='papers';});await expect(page.locator('#auth-form')).toHaveCount(0);
+ await page.getByRole('button',{name:'Registracija rada/autora',exact:true}).click();await expect(page.locator('.fee-grid')).toContainText('290');await expect(page.locator('.fee-grid')).toContainText('580');
+ await page.locator('.fee-card').first().getByRole('button').click();await expect(page.locator('#auth-form')).toBeVisible();
 });
